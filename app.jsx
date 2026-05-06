@@ -1,0 +1,139 @@
+// app.jsx — Calculator state machine
+
+const { useState: useStateA, useEffect: useEffectA, useMemo: useMemoA, useCallback: useCallbackA } = React;
+
+// ─────────────────────────────────────────────────────────────
+// Calculator state machine
+// ─────────────────────────────────────────────────────────────
+function useCalculator(initial = {}) {
+  // Hydrate once from localStorage if no preset state was passed.
+  // Step is clamped to 0..5 — restoring straight into the result/report
+  // would render with no `lead` payload (lead isn't persisted).
+  const hydrated = useMemoA(() => {
+    if (Object.keys(initial).length > 0) return initial;
+    try {
+      const raw = localStorage.getItem('signal.calculator.state');
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) { return {}; }
+  }, []);
+
+  const [step, setStep] = useStateA(Math.min(hydrated.step ?? 0, 5)); // 0 welcome, 1-5 steps, 6 calculating, 7 result, 8 report
+  const [industry, setIndustry] = useStateA(hydrated.industry ?? null);
+  const [dealValue, setDealValue] = useStateA(hydrated.dealValue ?? null);
+  const [dealPresetId, setDealPresetId] = useStateA(hydrated.dealPresetId ?? null);
+  const [weeklyEnquiries, setWeeklyEnquiries] = useStateA(hydrated.weeklyEnquiries ?? 20);
+  const [responseTime, setResponseTime] = useStateA(hydrated.responseTime ?? null);
+  const [coverage, setCoverage] = useStateA(hydrated.coverage ?? null);
+  const [gateOpen, setGateOpen] = useStateA(false);
+  const [lead, setLead] = useStateA(null);
+
+  const inputs = useMemoA(() => ({
+    industry, dealValue: dealValue || 0, weeklyEnquiries, responseTime, coverage,
+  }), [industry, dealValue, weeklyEnquiries, responseTime, coverage]);
+
+  const calc = useMemoA(() => {
+    if (!industry || !dealValue || !responseTime || !coverage) return null;
+    return window.IDS_calculate(inputs);
+  }, [inputs]);
+
+  const industryObj = useMemoA(() => window.IDS_INDUSTRIES.find(i => i.id === industry), [industry]);
+
+  // ── Persist to localStorage
+  useEffectA(() => {
+    try {
+      const ns = 'signal.calculator';
+      localStorage.setItem(`${ns}.state`, JSON.stringify({
+        step, industry, dealValue, dealPresetId, weeklyEnquiries, responseTime, coverage,
+      }));
+    } catch (e) {}
+  }, [step, industry, dealValue, dealPresetId, weeklyEnquiries, responseTime, coverage]);
+
+  function gotoStep(n) { setStep(n); }
+  function next() { setStep(s => Math.min(s + 1, 8)); }
+  function back() { setStep(s => Math.max(s - 1, 0)); }
+
+  function calculate() {
+    setStep(6);
+    setTimeout(() => setStep(7), 800);
+  }
+
+  function unlock() { setGateOpen(true); }
+  function submitLead(data) {
+    const payload = {
+      ...data,
+      industry, dealValue, weeklyEnquiries, responseTime, coverage,
+      monthlyLoss: calc?.monthlyLoss,
+      weeklyLoss: calc?.weeklyLoss,
+      submittedAt: new Date().toISOString(),
+    };
+    setLead(payload);
+    setGateOpen(false);
+    setStep(8);
+  }
+
+  function reset() {
+    setStep(0); setIndustry(null); setDealValue(null); setDealPresetId(null);
+    setWeeklyEnquiries(20); setResponseTime(null); setCoverage(null); setLead(null);
+    try { localStorage.removeItem('signal.calculator.state'); } catch(e) {}
+  }
+
+  return {
+    step, gotoStep, next, back, calculate, unlock, submitLead, reset,
+    industry, setIndustry,
+    dealValue, dealPresetId, setDealMeta: ({ value, presetId }) => { setDealValue(value); setDealPresetId(presetId); },
+    weeklyEnquiries, setWeeklyEnquiries,
+    responseTime, setResponseTime,
+    coverage, setCoverage,
+    inputs, calc, industryObj,
+    gateOpen, setGateOpen, lead,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────
+// Top-level calculator app — renders correct step
+// ─────────────────────────────────────────────────────────────
+function CalculatorApp({ presetState }) {
+  const c = useCalculator(presetState);
+
+  let body;
+  if (c.step === 0) {
+    body = <WelcomeScreen onStart={() => c.gotoStep(1)} />;
+  } else if (c.step === 1) {
+    body = <Step1Industry value={c.industry} onChange={c.setIndustry} onNext={c.next} onBack={() => c.gotoStep(0)} />;
+  } else if (c.step === 2) {
+    body = <Step2DealValue
+      value={c.dealValue} presetId={c.dealPresetId}
+      onChange={c.setDealMeta}
+      onNext={c.next} onBack={c.back}
+    />;
+  } else if (c.step === 3) {
+    body = <Step3Enquiries value={c.weeklyEnquiries} onChange={c.setWeeklyEnquiries} onNext={c.next} onBack={c.back} />;
+  } else if (c.step === 4) {
+    body = <Step4Response value={c.responseTime} onChange={c.setResponseTime} onNext={c.next} onBack={c.back} />;
+  } else if (c.step === 5) {
+    body = <Step5Coverage value={c.coverage} onChange={c.setCoverage} onCalculate={c.calculate} onBack={c.back} />;
+  } else if (c.step === 6) {
+    body = <CalculatingState />;
+  } else if (c.step === 7) {
+    body = <ResultScreenAnnual inputs={c.inputs} calc={c.calc} industryObj={c.industryObj} onUnlock={c.unlock} onBack={() => c.gotoStep(5)} />;
+  } else if (c.step === 8) {
+    body = <ReportSentScreen calc={c.calc} lead={c.lead} onRestart={c.reset} />;
+  }
+
+  // Show progress chrome for steps 1–5
+  const showChrome = c.step >= 1 && c.step <= 5;
+  // Result/report have their own chrome
+  const isFullBleed = c.step >= 7;
+
+  return (
+    <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', background: 'var(--bg)' }}>
+      {showChrome && <ProgressChrome step={c.step} totalSteps={5} />}
+      <div key={c.step} style={{ position: 'absolute', inset: 0, overflowY: 'auto' }} className="step-enter">
+        {body}
+      </div>
+      <EmailGate open={c.gateOpen} onClose={() => c.setGateOpen(false)} onSubmit={c.submitLead} />
+    </div>
+  );
+}
+
+Object.assign(window, { CalculatorApp, useCalculator });

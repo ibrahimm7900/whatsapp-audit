@@ -1,0 +1,69 @@
+/* Signal — Print A4 stylesheet for the personalised report */
+
+@page {
+  size: A4 portrait;
+  margin: 18mm 16mm;
+}
+
+@media print {
+  html, body { background: #fff !important; }
+  .no-print { display: none !important; }
+  .report-page { box-shadow: none !important; margin: 0 !important; }
+}
+
+.report-doc {
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--fg);
+  background: var(--bg-3);
+  padding: 32px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+
+.report-page {
+  width: 794px;             /* A4 @ 96dpi */
+  min-height: 1123px;
+  background: var(--bg);
+  padding: 56px 56px 48px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  position: relative;
+  page-break-after: always;
+  display: flex;
+  flex-direction: column;
+}
+
+@media print {
+  .report-doc { padding: 0; gap: 0; background: #fff; }
+  .report-page { width: auto; min-height: auto; padding: 0; box-shadow: none; }
+}
+
+.report-h1 {
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 600;
+  font-size: 28px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  text-wrap: balance;
+}
+.report-h2 {
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 600;
+  font-size: 22px;
+  line-height: 1.2;
+  letter-spacing: -0.018em;
+  color: var(--fg);
+}
+.report-body { font-size: 13.5px; line-height: 1.55; color: var(--fg-2); }
+.report-fineprint { font-size: 11px; line-height: 1.5; color: var(--fg-3); }
+
+.report-mono {
+  font-family: 'Geist Mono', monospace;
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}

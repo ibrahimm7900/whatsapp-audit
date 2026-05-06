@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#FAFAF7" />
+  <title>WhatsApp Revenue Audit · Ibrahim Digital</title>
+  <link rel="stylesheet" href="signal.css" />
+  <link rel="stylesheet" href="print-a4.css" />
+  <style>
+    /* Mobile-first full-bleed shell */
+    body { background: var(--paper); overscroll-behavior-y: none; }
+    #app-root {
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;       /* iOS Safari URL-bar fix */
+      overflow: hidden;
+      position: relative;
+    }
+    /* Desktop: centered card on a paper background */
+    @media (min-width: 768px) {
+      body {
+        background: #EDEBE3;
+        display: flex; align-items: center; justify-content: center;
+        min-height: 100vh; padding: 32px 16px;
+      }
+      #app-root {
+        width: 420px;
+        height: 820px;
+        max-height: calc(100vh - 64px);
+        border-radius: 18px;
+        box-shadow: 0 30px 60px rgba(15,30,22,0.18), 0 0 0 1px var(--hairline);
+      }
+    }
+    /* Print: drop all chrome */
+    @media print {
+      body { background: #fff !important; padding: 0 !important; }
+      #app-root {
+        width: auto !important; height: auto !important;
+        max-height: none !important; box-shadow: none !important;
+        border-radius: 0 !important; overflow: visible !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div id="app-root"></div>
+
+<!-- React production builds (smaller, no dev warnings) -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+<!-- Plain JS — runs before babel transforms -->
+<script src="data.js"></script>
+
+<!-- JSX modules — transformed by Babel-standalone in the browser -->
+<script type="text/babel" data-presets="react" src="calc-shell.jsx"></script>
+<script type="text/babel" data-presets="react" src="calc-result.jsx"></script>
+<script type="text/babel" data-presets="react" src="app.jsx"></script>
+
+<!-- Mount -->
+<script type="text/babel" data-presets="react">
+  ReactDOM.createRoot(document.getElementById('app-root')).render(<CalculatorApp />);
+</script>
+
+</body>
+</html>
