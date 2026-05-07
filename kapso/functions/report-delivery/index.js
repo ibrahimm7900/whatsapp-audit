@@ -341,11 +341,11 @@ async function handler(request, env) {
     workflows:       workflows,
   });
 
-  var pdfRes = await fetch('https://api.pdfshift.io/v3/convert/chromium', {
+  var pdfRes = await fetch('https://api.pdfshift.io/v3/convert/pdf', {
     method: 'POST',
     headers: {
-      'Content-Type':  'application/json',
-      'Authorization': 'Basic ' + btoa(PDFSHIFT_API_KEY + ':'),
+      'Content-Type': 'application/json',
+      'X-API-Key':    env.PDFSHIFT_API_KEY || PDFSHIFT_API_KEY,
     },
     body: JSON.stringify({ source: htmlString, format: 'A4', margin: { top:'0', right:'0', bottom:'0', left:'0' }, landscape: false }),
   });

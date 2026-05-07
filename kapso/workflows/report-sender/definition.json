@@ -24,11 +24,11 @@
     {
       "data": {
         "config": {
-          "function_name": "Report Delivery",
+          "function_name": "report-delivery",
           "function_slug": "report-delivery",
           "save_response_to": null
         },
-        "display_name": "Function: Report Delivery",
+        "display_name": "Function: report-delivery",
         "node_type": "function"
       },
       "id": "generate-and-send",
