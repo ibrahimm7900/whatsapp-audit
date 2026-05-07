@@ -1,10 +1,9 @@
 // Kapso Function: report-delivery
 // Single-file plain JS Cloudflare Worker
-// Receives workflow vars -> scores workflows -> builds HTML -> PDFShift -> WhatsApp
+// Receives workflow vars -> scores workflows -> builds HTML -> PDFShift -> WhatsApp template
 
 const PHONE_NUMBER_ID  = '1162751303579401';
 const KAPSO_BASE       = 'https://api.kapso.ai';
-const PDFSHIFT_API_KEY = 'sk_f2ea0f67c1c812135ef5ed3320395f05760774c4';
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
@@ -345,7 +344,7 @@ async function handler(request, env) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-API-Key':    env.PDFSHIFT_API_KEY || PDFSHIFT_API_KEY,
+      'X-API-Key': env.PDFSHIFT_API_KEY,
     },
     body: JSON.stringify({ source: htmlString, format: 'A4', margin: { top:'0', right:'0', bottom:'0', left:'0' }, landscape: false }),
   });
@@ -374,31 +373,43 @@ async function handler(request, env) {
   }
   var mediaId = (await uploadRes.json()).id;
 
-  // 3. Send text message
-  await fetch(KAPSO_BASE + '/meta/whatsapp/v24.0/' + PHONE_NUMBER_ID + '/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-API-Key': env.KAPSO_API_KEY },
-    body: JSON.stringify({
-      messaging_product: 'whatsapp',
-      to: phone_number, type: 'text',
-      text: { body: 'Hi ' + lead_name + ' 👋\n\nHere\'s your WhatsApp Revenue Audit from Ibrahim Digital.\n\nBased on your inputs, your business is leaking *' + fmtAED(monthlyLoss) + '* every month from missed WhatsApp enquiries.\n\nI\'ve put together 3 workflows that would fix your specific gap - your personalised report is attached.\n\n_If you want to talk about getting these live in 48 hours, just reply to this message._' },
-    }),
-  });
+  // 3. Send via approved template (works for cold leads outside 24hr window)
+  var templateRes = await fetch(
+    KAPSO_BASE + '/meta/whatsapp/v24.0/' + PHONE_NUMBER_ID + '/messages',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': env.KAPSO_API_KEY },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        to: phone_number,
+        type: 'template',
+        template: {
+          name: 'revenue_audit_report',
+          language: { code: 'en_US' },
+          components: [
+            {
+              type: 'header',
+              parameters: [
+                { type: 'document', document: { id: mediaId, filename: fileName } }
+              ]
+            },
+            {
+              type: 'body',
+              parameters: [
+                { type: 'text', parameter_name: 'lead_name',    text: lead_name },
+                { type: 'text', parameter_name: 'monthly_loss', text: fmtAED(monthlyLoss) }
+              ]
+            }
+          ]
+        }
+      }),
+    }
+  );
 
-  // 4. Send PDF document
-  var docRes = await fetch(KAPSO_BASE + '/meta/whatsapp/v24.0/' + PHONE_NUMBER_ID + '/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-API-Key': env.KAPSO_API_KEY },
-    body: JSON.stringify({
-      messaging_product: 'whatsapp',
-      to: phone_number, type: 'document',
-      document: { id: mediaId, filename: fileName, caption: 'Your WhatsApp Revenue Audit - Ibrahim Digital Solutions' },
-    }),
-  });
-  if (!docRes.ok) {
-    var docErr = await docRes.text();
-    console.error('[report-delivery] document send failed:', docErr);
-    return Response.json({ error: 'document send failed', detail: docErr }, { status: 502 });
+  if (!templateRes.ok) {
+    var tplErr = await templateRes.text();
+    console.error('[report-delivery] template send failed:', tplErr);
+    return Response.json({ error: 'template send failed', detail: tplErr }, { status: 502 });
   }
 
   return Response.json({ vars: { delivery_status: 'sent' } });
