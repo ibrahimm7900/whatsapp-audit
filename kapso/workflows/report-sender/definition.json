@@ -3,13 +3,15 @@
     {
       "label": "next",
       "source": "start",
-      "target": "generate-and-send"
+      "target": "generate-and-send",
+      "type": "default"
     }
   ],
   "nodes": [
     {
       "data": {
         "config": {},
+        "display_name": "Start",
         "node_type": "start"
       },
       "id": "start",
@@ -22,9 +24,11 @@
     {
       "data": {
         "config": {
-          "function_slug": "report-delivery"
+          "function_name": "Report Delivery",
+          "function_slug": "report-delivery",
+          "save_response_to": null
         },
-        "display_name": "Report Delivery",
+        "display_name": "Function: Report Delivery",
         "node_type": "function"
       },
       "id": "generate-and-send",
