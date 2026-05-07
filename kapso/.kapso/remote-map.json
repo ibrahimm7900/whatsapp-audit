@@ -1,0 +1,38 @@
+{
+  "functions": {
+    "report-delivery": {
+      "files": {
+        "functions\\report-delivery\\function.yaml": "988526fc531c6328b7340d63b2bda7ef51d58f89edca31a9c2d25f083e2b4b78",
+        "functions\\report-delivery\\index.js": "56b22f595a55e0f6ad40d1ad94e00e937e11335bbdc91da589724b7f6c03ee41"
+      },
+      "id": "5e3cf632-3094-46ec-a8b5-fa4584deb4f1",
+      "lastDeployedAt": null,
+      "lockVersion": 4,
+      "slug": "report-delivery",
+      "status": "error",
+      "updatedAt": "2026-05-07T08:23:14-04:00"
+    }
+  },
+  "version": 1,
+  "workflows": {
+    "report-sender": {
+      "files": {
+        "workflows\\report-sender\\definition.json": "5855ee6f2e29243c1c1342cab1fab38af2d79e2eceab10b801572786145e8d87",
+        "workflows\\report-sender\\workflow.yaml": "20cff05a1ebb6b8fd496885a5730a9e311e322e3dad17059eaf9c4fc8a59b89a"
+      },
+      "generatedSource": {
+        "hash": "c3ddeccbf8e43cf31c7623442cfaa39ed3622e42024efaf3cb3cba1c0b26c8ba",
+        "path": "workflows\\report-sender\\workflow.js"
+      },
+      "id": "59e4a70f-cf3b-4b3a-9ee3-31fbf319d803",
+      "lockVersion": 4,
+      "slug": "report-sender",
+      "sourceFile": {
+        "hash": "08c5e67c891154473c08e6ed109fb3e2ce24fcbb4eb0dc42d83997ac0744ac5e",
+        "path": "workflows\\report-sender\\workflow.ts"
+      },
+      "status": "active",
+      "updatedAt": "2026-05-07T08:28:58-04:00"
+    }
+  }
+}

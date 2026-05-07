@@ -2,6 +2,12 @@
 
 const { useState: useStateA, useEffect: useEffectA, useMemo: useMemoA, useCallback: useCallbackA } = React;
 
+// ── Kapso delivery endpoint ───────────────────────────────────
+// Fill these in after Phase 4 deploy
+const KAPSO_API_BASE    = 'https://api.kapso.ai/platform/v1';
+const KAPSO_WORKFLOW_ID = '59e4a70f-cf3b-4b3a-9ee3-31fbf319d803';
+const KAPSO_PUBLIC_KEY  = '58f988d84e4310ceb5eb3202457289824e662cc40a03f37d0a913de290982c5b';
+
 // ─────────────────────────────────────────────────────────────
 // Calculator state machine
 // ─────────────────────────────────────────────────────────────
@@ -58,15 +64,62 @@ function useCalculator(initial = {}) {
   }
 
   function unlock() { setGateOpen(true); }
-  function submitLead(data) {
-    const payload = {
-      ...data,
-      industry, dealValue, weeklyEnquiries, responseTime, coverage,
-      monthlyLoss: calc?.monthlyLoss,
-      weeklyLoss: calc?.weeklyLoss,
-      submittedAt: new Date().toISOString(),
+  async function submitLead(data) {
+    const { name, whatsapp } = data;
+
+    // Generate the full report Markdown client-side — all data is in memory
+    const markdown = window.generateReportMD(inputs, calc, industryObj, name);
+
+    // Build the Kapso workflow execution payload
+    const kapsoPayload = {
+      workflow_execution: {
+        phone_number: whatsapp,
+        variables: {
+          lead_name:         name,
+          phone_number:      whatsapp,
+          monthly_loss:      window.IDS_fmtAED(calc.monthlyLoss),
+          weekly_loss:       window.IDS_fmtAED(calc.weeklyLoss),
+          annual_loss:       window.IDS_fmtAED(calc.monthlyLoss * 12),
+          markdown,
+          // Structured fields for pdf-builder in the Kapso Function
+          industry:          inputs.industry,
+          industry_name:     industryObj.name,
+          deal_label:        industryObj.dealLabel,
+          deal_value:        inputs.dealValue,
+          weekly_enquiries:  inputs.weeklyEnquiries,
+          response_time_id:  inputs.responseTime,
+          coverage_id:       inputs.coverage,
+          loss_rate_pct:     calc.lossRatePercent,
+          coverage_mult_pct: calc.coverageMultiplierPercent,
+        },
+      },
     };
-    setLead(payload);
+
+    try {
+      await fetch(
+        `${KAPSO_API_BASE}/workflows/${KAPSO_WORKFLOW_ID}/executions`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': KAPSO_PUBLIC_KEY,
+          },
+          body: JSON.stringify(kapsoPayload),
+        }
+      );
+    } catch (err) {
+      // Log but don't block — user still sees success screen
+      console.error('[Kapso] delivery failed:', err);
+    }
+
+    // Advance to ReportSentScreen
+    setLead({
+      name, whatsapp,
+      industry:    inputs.industry,
+      monthlyLoss: calc?.monthlyLoss,
+      weeklyLoss:  calc?.weeklyLoss,
+      submittedAt: new Date().toISOString(),
+    });
     setGateOpen(false);
     setStep(8);
   }

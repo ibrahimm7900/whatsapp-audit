@@ -1,0 +1,15 @@
+{
+  "name": "kapso-report-delivery",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@kapso/whatsapp-cloud-api": "latest",
+    "@kapso/workflows": "^0.2.0",
+    "pdf-lib": "^1.17.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "latest",
+    "esbuild": "^0.28.0",
+    "typescript": "^5"
+  }
+}

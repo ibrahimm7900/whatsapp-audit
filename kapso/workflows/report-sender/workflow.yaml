@@ -1,0 +1,7 @@
+definition: definition.json
+name: Report Delivery — WhatsApp Audit
+slug: report-sender
+status: active
+triggers:
+  - active: true
+    triggerType: api_call

@@ -1,0 +1,32 @@
+{
+  "name": "report-sender",
+  "display_name": "Report Delivery — WhatsApp Audit",
+  "description": "Triggered by the WhatsApp Audit calculator. Receives lead data + Markdown report, builds a branded PDF via the report-delivery Function, and sends the text + PDF document to the lead's WhatsApp number.",
+  "trigger": {
+    "type": "api"
+  },
+  "nodes": [
+    {
+      "id": "generate-and-send",
+      "type": "function",
+      "function_slug": "report-delivery",
+      "input_mapping": {
+        "lead_name":         "{{trigger.variables.lead_name}}",
+        "phone_number":      "{{trigger.variables.phone_number}}",
+        "monthly_loss":      "{{trigger.variables.monthly_loss}}",
+        "weekly_loss":       "{{trigger.variables.weekly_loss}}",
+        "annual_loss":       "{{trigger.variables.annual_loss}}",
+        "markdown":          "{{trigger.variables.markdown}}",
+        "industry":          "{{trigger.variables.industry}}",
+        "industry_name":     "{{trigger.variables.industry_name}}",
+        "deal_label":        "{{trigger.variables.deal_label}}",
+        "deal_value":        "{{trigger.variables.deal_value}}",
+        "weekly_enquiries":  "{{trigger.variables.weekly_enquiries}}",
+        "response_time_id":  "{{trigger.variables.response_time_id}}",
+        "coverage_id":       "{{trigger.variables.coverage_id}}",
+        "loss_rate_pct":     "{{trigger.variables.loss_rate_pct}}",
+        "coverage_mult_pct": "{{trigger.variables.coverage_mult_pct}}"
+      }
+    }
+  ]
+}

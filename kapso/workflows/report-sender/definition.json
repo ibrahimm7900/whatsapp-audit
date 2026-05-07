@@ -1,0 +1,38 @@
+{
+  "edges": [
+    {
+      "label": "next",
+      "source": "start",
+      "target": "generate-and-send"
+    }
+  ],
+  "nodes": [
+    {
+      "data": {
+        "config": {},
+        "node_type": "start"
+      },
+      "id": "start",
+      "position": {
+        "x": 100,
+        "y": 100
+      },
+      "type": "flow-node"
+    },
+    {
+      "data": {
+        "config": {
+          "function_slug": "report-delivery"
+        },
+        "display_name": "Report Delivery",
+        "node_type": "function"
+      },
+      "id": "generate-and-send",
+      "position": {
+        "x": 100,
+        "y": 250
+      },
+      "type": "flow-node"
+    }
+  ]
+}

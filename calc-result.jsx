@@ -27,6 +27,110 @@ function useCountUp(target, duration = 1400, start = 0) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// Report Markdown generator
+// Mirrors the 3-page content of calc-report.jsx as plain text.
+// Called by submitLead in app.jsx before POSTing to Kapso.
+// ─────────────────────────────────────────────────────────────
+
+// Ported verbatim from calc-report.jsx getDiagnosis()
+function getDiagnosisParagraph(inputs, calc) {
+  const fast = inputs.responseTime === 'under_1hr' || inputs.responseTime === '1_4hrs';
+  const cov  = inputs.coverage;
+  if (cov === 'weekdays_only' && !fast)
+    return "You're available roughly 45 hours per week. Your leads come in 168 hours per week. The gap — evenings, Fridays, weekends — is where your revenue is going. Every hour offline is an hour a competitor can reply first.";
+  if (cov === 'weekdays_only' && fast)
+    return "You reply quickly when you're there. The problem is the hours you're not. Evenings, Fridays, and weekends account for 35–45% of all WhatsApp enquiries in the UAE. Those hours are currently unattended.";
+  if (cov === 'weekdays_weekends' && !fast)
+    return "You're available most days, but your response time is giving leads enough time to contact a competitor and hear back first. In the UAE, 78% of customers commit to whoever responds first.";
+  if (cov === 'weekdays_weekends' && fast)
+    return `You're fast and available most of the time. The gap is after-hours — evenings and nights when enquiries come in but nothing goes out. That window is costing you ${window.IDS_fmtAED(calc.monthlyLoss)} per month.`;
+  if (cov === 'always' && !fast)
+    return "You're always reachable, but the speed of your replies is the leak. UAE buyers contact multiple businesses simultaneously. The first reply wins — at your current response time, you're rarely first.";
+  return `You reply quickly and you're always available. Your loss is lower than most — but at ${calc.lossRatePercent}% of enquiries still not converting, there is ${window.IDS_fmtAED(calc.monthlyLoss)} per month in leads that are not being captured, qualified, or followed up.`;
+}
+
+// Ported verbatim from calc-report.jsx getWhyThree()
+function getWhyThreeParagraph(inputs, calc, industryObj) {
+  const enq = inputs.weeklyEnquiries >= 200 ? '200+' : inputs.weeklyEnquiries;
+  return `You handle ${inputs.dealValue >= 50000 ? 'high-value' : 'time-sensitive'} ${industryObj.name.toLowerCase()} leads in a market where the first reply wins. With ${enq} enquiries per week and ${calc.responseTimeReadable}, your biggest gap is ${calc.coverageMultiplierPercent > 0 ? "coverage — leads going cold while you're offline" : 'speed — competitors replying first'}. These three workflows address that gap in order of ROI.`;
+}
+
+function generateReportMD(inputs, calc, industryObj, name) {
+  const workflows     = window.IDS_scoreWorkflows(inputs);
+  const dateStr       = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const respObj       = window.IDS_RESPONSE.find(r => r.id === inputs.responseTime);
+  const covObj        = window.IDS_COVERAGE.find(c => c.id === inputs.coverage);
+  const enq           = inputs.weeklyEnquiries >= 200 ? '200+' : inputs.weeklyEnquiries;
+  const annual        = calc.monthlyLoss * 12;
+  const lossWithPilot = Math.round((calc.monthlyLoss * 0.25) / 100) * 100;
+  const netWithPilot  = calc.monthlyLoss - lossWithPilot - 5000;
+  const fmt           = window.IDS_fmtAED;
+
+  const workflowBlocks = workflows.map((w, i) => [
+    `### ${w.isStartHere ? '★ ' : ''}${i + 1}. ${w.name}${w.isStartHere ? ' — START HERE' : ''}`,
+    '',
+    w.does,
+    '',
+    `**Recovers:** ${w.recovers}`,
+    `**Complexity:** ${w.complexity} · Live in 48 hours`,
+    '',
+  ].join('\n')).join('\n');
+
+  return [
+    '# WhatsApp Revenue Report · Ibrahim Digital Solutions',
+    '',
+    '<!-- PAGE:1 -->',
+    '## Your Situation',
+    `**Prepared for:** ${name} · ${dateStr}`,
+    '',
+    '### Diagnosis',
+    getDiagnosisParagraph(inputs, calc),
+    '',
+    '### Your Situation',
+    '| | |',
+    '|---|---|',
+    `| Industry | ${industryObj.name} |`,
+    `| Average ${industryObj.dealLabel} value | ${fmt(inputs.dealValue)} |`,
+    `| Weekly enquiries | ${enq} messages |`,
+    `| Response time | ${respObj.label} |`,
+    `| Coverage | ${covObj.label} |`,
+    '',
+    '### The Bottom Line',
+    `**Monthly loss:** ${fmt(calc.monthlyLoss)}`,
+    `**Weekly loss:** ${fmt(calc.weeklyLoss)}`,
+    `**Annual loss:** ${fmt(annual)}`,
+    '',
+    '<!-- PAGE:2 -->',
+    '## Workflow Recommendations',
+    `**Based on:** ${industryObj.name} · ${respObj.label} · ${covObj.label}`,
+    '',
+    '### Why These Three',
+    getWhyThreeParagraph(inputs, calc, industryObj),
+    '',
+    workflowBlocks,
+    '<!-- PAGE:3 -->',
+    '## The Numbers, Side by Side',
+    '',
+    '| | Doing nothing | Starting the pilot |',
+    '|---|---|---|',
+    '| Setup cost | AED 0 | AED 0 |',
+    '| Monthly cost | AED 0 | AED 5,000 |',
+    `| Monthly loss | ${fmt(calc.monthlyLoss)} | ${fmt(lossWithPilot)} |`,
+    `| Net position | −${fmt(calc.monthlyLoss)} | +${fmt(netWithPilot)} |`,
+    '',
+    `Every month you wait costs you ${fmt(calc.monthlyLoss)}.`,
+    `Every month with the pilot costs you AED 5,000.`,
+    `The difference is ${fmt(netWithPilot)} — in your pocket, not your competitors'.`,
+    '',
+    "### Your Next Step — Try it free. See it work. Then decide.",
+    '**AED 0** to start · **48 hrs** to live · **No contract**',
+    '',
+    '**WhatsApp:** +44 7842 552606',
+    '**Instagram:** @ibrahim.prompted',
+  ].join('\n');
+}
+
+// ─────────────────────────────────────────────────────────────
 // Loss vs Captured visual breakdown bar
 // ─────────────────────────────────────────────────────────────
 function LossBar({ lossPct }) {
@@ -171,7 +275,8 @@ function EmailGate({ open, onClose, onSubmit }) {
     setSubmitting(true);
     // E.164 format for Kapso / WhatsApp APIs: +<country><number>
     const whatsapp = dialCode + localDigits;
-    setTimeout(() => onSubmit({ name: name.trim(), whatsapp }), 1200);
+    // Call immediately — real async work in submitLead drives the loading state
+    onSubmit({ name: name.trim(), whatsapp });
   }
 
   return (
@@ -361,4 +466,4 @@ function ReportSentScreen({ calc, lead, onRestart }) {
   );
 }
 
-Object.assign(window, { ResultScreen, ResultScreenAnnual, ReportSentScreen, EmailGate, useCountUp, LossBar });
+Object.assign(window, { ResultScreen, ResultScreenAnnual, ReportSentScreen, EmailGate, useCountUp, LossBar, generateReportMD });
