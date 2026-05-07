@@ -150,129 +150,226 @@ function buildReportHTML(p) {
   var diagnosis = getDiagnosisParagraph(inputs, calc);
   var whyThree  = getWhyThreeParagraph(inputs, calc, industryName);
 
-  function hdr(n) {
-    return '<div style="background:#1F4A37;color:#FAFAF7;padding:13pt 44pt;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">' +
-      '<span style="font-size:7.5pt;letter-spacing:0.12em;font-weight:bold;">WHATSAPP REVENUE REPORT &middot; 0' + n + ' / 03</span>' +
-      '<span style="font-size:7.5pt;opacity:0.75;">Ibrahim Digital Solutions</span>' +
+  function masthead(n) {
+    return '<div class="mh">' +
+      '<div class="lk"><div class="dd"><s></s><s></s></div>' +
+      '<div class="wm">ibrahim<b> /</b> digital</div></div>' +
+      '<div class="mm">Whatsapp Revenue Audit &middot; 0' + n + ' / 03</div>' +
     '</div>';
   }
 
-  function ftr(n) {
-    return '<div style="border-top:0.5pt solid #D8D5CE;padding:9pt 44pt;display:flex;justify-content:space-between;font-size:7pt;color:#616657;flex-shrink:0;">' +
-      '<span>Ibrahim Digital &middot; Dubai &middot; ibrahimdigital.com</span>' +
-      '<span>Page ' + n + ' of 3</span>' +
+  function footer(n, lastText) {
+    return '<div class="ft">' +
+      '<span>Ibrahim Digital &middot; Dubai</span>' +
+      '<span>0' + n + ' / 03</span>' +
+      '<span>' + (lastText || 'Confidential') + '</span>' +
     '</div>';
   }
 
-  var tRows = [
+  // Situation table rows
+  var sitRows = [
     ['Industry', esc(industryName)],
     ['Average ' + esc(dealLabel) + ' value', 'AED ' + Number(dealValue).toLocaleString('en-US')],
     ['Weekly enquiries', weeklyEnquiries + ' messages'],
     ['Response time', esc(respObj.label)],
-    ['Coverage', esc(covObj.label)],
+    ['Coverage', esc(covObj.label)]
   ];
-  var sitTable = tRows.map(function(r, i) {
-    return '<tr style="background:' + (i%2===0?'#F0EEE8':'#FAFAF7') + ';">' +
-      '<td style="padding:8pt 12pt;color:#616657;font-size:8.5pt;font-weight:bold;width:42%;">' + r[0] + '</td>' +
-      '<td style="padding:8pt 12pt;font-size:9pt;">' + r[1] + '</td>' +
-    '</tr>';
+  var sitTable = sitRows.map(function(r) {
+    return '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td></tr>';
   }).join('');
 
+  // Workflow cards
   var ords = ['01','02','03'];
   var wCards = workflows.map(function(w, i) {
-    var bd = w.isStartHere ? '#D4956B' : '#D8D5CE';
-    var bg = w.isStartHere ? '#FFF8F3' : '#FFFFFF';
-    var badge = w.isStartHere ? '<div style="font-size:7pt;letter-spacing:0.1em;color:#D4956B;font-weight:bold;margin-bottom:5pt;">&#9733; START HERE</div>' : '';
-    return '<div style="border-left:3pt solid ' + bd + ';padding:13pt 16pt;margin-bottom:10pt;background:' + bg + ';border-radius:0 3pt 3pt 0;">' +
-      badge +
-      '<div style="font-size:10.5pt;font-weight:bold;color:#1A1D18;margin-bottom:6pt;">' + ords[i] + '&nbsp;&nbsp;' + esc(w.name) + '</div>' +
-      '<p style="font-size:8.5pt;color:#616657;margin-bottom:8pt;line-height:1.45;">' + esc(w.does) + '</p>' +
-      '<div style="font-size:7pt;letter-spacing:0.1em;color:#616657;font-weight:bold;margin-bottom:2pt;">RECOVERS</div>' +
-      '<p style="font-size:8.5pt;margin-bottom:8pt;line-height:1.4;">' + esc(w.recovers) + '</p>' +
-      '<div style="font-size:7pt;letter-spacing:0.08em;color:#9A9A8A;">' + w.complexity.toUpperCase() + ' COMPLEXITY &middot; LIVE IN 48 HOURS</div>' +
+    var sh = w.isStartHere ? ' sh' : '';
+    var badge = w.isStartHere ? '<span class="sb">&#9733; Start here</span>' : '';
+    return '<div class="wc' + sh + '">' + badge +
+      '<div class="wn-num">' + ords[i] + '</div>' +
+      '<div class="wn">' + esc(w.name) + '</div>' +
+      '<p class="wd">' + esc(w.does) + '</p>' +
+      '<span class="rl">Recovers</span>' +
+      '<p class="wr">' + esc(w.recovers) + '</p>' +
+      '<div class="wmt">' + esc(w.complexity) + ' complexity &middot; Live in 48 hours</div>' +
     '</div>';
   }).join('');
 
+  // Comparison table rows
   var cRows = [
-    ['Setup cost',   'AED 0',                   'AED 0'],
-    ['Monthly cost', 'AED 0',                   'AED 5,000'],
-    ['Monthly loss', fmtAED(calc.monthlyLoss),  fmtAED(lossWithPilot)],
-    ['Net position', '&minus;' + fmtAED(calc.monthlyLoss), '+' + fmtAED(Math.max(netWithPilot, 0))],
+    ['Setup cost',   'AED 0',                              'AED 0',                                       null,    null],
+    ['Monthly cost', 'AED 0',                              'AED 5,000',                                   null,    null],
+    ['Monthly loss', fmtAED(calc.monthlyLoss),             fmtAED(lossWithPilot),                          null,    null],
+    ['Net position', '&minus;' + fmtAED(calc.monthlyLoss), '+' + fmtAED(Math.max(netWithPilot, 0)),       'red',   'grn']
   ];
-  var cTable = cRows.map(function(r, i) {
-    var last = i === cRows.length - 1;
-    return '<tr style="background:' + (i%2===0?'#F0EEE8':'#FAFAF7') + ';">' +
-      '<td style="padding:9pt 12pt;font-size:8.5pt;color:#616657;">' + r[0] + '</td>' +
-      '<td style="padding:9pt 12pt;font-size:8.5pt;text-align:right;' + (last?'color:#CC4444;font-weight:bold;':'') + '">' + r[1] + '</td>' +
-      '<td style="padding:9pt 12pt;font-size:8.5pt;text-align:right;' + (last?'color:#2A7A4A;font-weight:bold;':'') + '">' + r[2] + '</td>' +
-    '</tr>';
+  var cTable = cRows.map(function(r) {
+    var c1 = r[3] ? ' class="' + r[3] + '"' : '';
+    var c2 = r[4] ? ' class="' + r[4] + '"' : '';
+    return '<tr><td class="tl">' + r[0] + '</td><td' + c1 + '>' + r[1] + '</td><td' + c2 + '>' + r[2] + '</td></tr>';
   }).join('');
 
-  var css = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>' +
+  // Inlined Signal brand styles (forked from report-preview.html)
+  var css = '<style>' +
+    ':root{--forest:#1F4A37;--sage:#8FA695;--clay:#D4956B;--paper:#FAFAF7;--bone:#F2F1EC;--stone:#E6E4DC;--ink:#0E0E0C;--ink2:#2A2A26;--mute:#6E6E68;--line:rgba(14,14,12,0.10);--line-d:rgba(250,250,247,0.18);--fd:"Inter Tight",Helvetica,sans-serif;--fb:"Inter",Helvetica,sans-serif;--fm:"Geist Mono",monospace;}' +
+    '*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}' +
     '@page{size:A4 portrait;margin:0;}' +
-    '*{box-sizing:border-box;margin:0;padding:0;}' +
-    'body{font-family:Helvetica,Arial,sans-serif;background:#FAFAF7;color:#1A1D18;font-size:10pt;line-height:1.5;}' +
-    '.page{width:595pt;height:842pt;page-break-after:always;overflow:hidden;display:flex;flex-direction:column;background:#FAFAF7;}' +
-    '.page:last-child{page-break-after:auto;}' +
-    '.body{padding:28pt 44pt 20pt;flex:1;display:flex;flex-direction:column;overflow:hidden;}' +
-    '</style></head><body>';
+    'html,body{background:var(--paper);}' +
+    '.page{width:210mm;height:290mm;background:var(--paper);display:flex;flex-direction:column;overflow:hidden;page-break-inside:avoid;break-inside:avoid;margin:0 auto;}' +
+    '.page+.page{page-break-before:always;break-before:page;}' +
+    '.mh{background:var(--forest);padding:14px 32px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}' +
+    '.lk{display:inline-flex;align-items:center;gap:10px;}' +
+    '.dd{display:inline-flex;gap:4px;}' +
+    '.dd s{width:10px;height:10px;border-radius:50%;background:var(--sage);display:block;}' +
+    '.dd s:last-child{opacity:0.4;}' +
+    '.wm{font-family:var(--fd);font-size:18px;font-weight:600;letter-spacing:-0.02em;color:#fff;}' +
+    '.wm b{font-weight:600;color:var(--clay);font-style:normal;}' +
+    '.mm{font-family:var(--fm);font-size:9.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--sage);}' +
+    '.bd{flex:1;padding:32px 36px 28px;display:flex;flex-direction:column;justify-content:space-between;}' +
+    '.blk{display:block;}' +
+    '.ey{font-family:var(--fm);font-size:10px;font-weight:600;letter-spacing:0.22em;text-transform:uppercase;color:var(--forest);display:block;margin-bottom:10px;}' +
+    'h1{font-family:var(--fd);font-size:44px;font-weight:500;letter-spacing:-0.03em;line-height:1.05;color:var(--ink);margin-bottom:18px;}' +
+    'h2{font-family:var(--fd);font-size:30px;font-weight:600;letter-spacing:-0.02em;line-height:1.15;color:var(--ink);margin-bottom:10px;}' +
+    'p{font-family:var(--fb);font-size:15px;line-height:1.6;color:var(--ink2);}' +
+    '.st{width:100%;border-collapse:collapse;}' +
+    '.st tr:nth-child(odd) td{background:var(--bone);}' +
+    '.st tr:nth-child(even) td{background:var(--paper);}' +
+    '.st td{padding:14px 18px;font-family:var(--fb);font-size:15px;line-height:1.4;color:var(--ink2);border-bottom:1px solid var(--line);}' +
+    '.st td:first-child{font-family:var(--fm);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--mute);font-weight:500;width:44%;}' +
+    '.st tr:last-child td{border-bottom:none;}' +
+    '.st-head{margin-bottom:12px;}' +
+    '.lp{background:var(--forest);border-radius:10px;padding:26px 30px;display:flex;align-items:stretch;}' +
+    '.li{flex:1;padding-right:22px;}' +
+    '.li+.li{padding-right:0;padding-left:22px;border-left:1px solid var(--line-d);}' +
+    '.ll{font-family:var(--fm);font-size:9.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--sage);margin-bottom:8px;display:block;}' +
+    '.lf{font-family:var(--fd);font-size:38px;font-weight:500;letter-spacing:-0.03em;line-height:1;color:var(--clay);}' +
+    '.ls{font-family:var(--fb);font-size:13px;color:rgba(255,255,255,0.55);margin-top:6px;}' +
+    '.ft{padding:14px 32px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}' +
+    '.ft span{font-family:var(--fm);font-size:9.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--mute);}' +
+    '.ft span:last-child{text-align:right;}' +
+    '.wc{border-left:3px solid var(--line);border-radius:0 8px 8px 0;padding:18px 22px;margin-bottom:12px;background:var(--bone);}' +
+    '.wc.sh{border-left-color:var(--clay);background:#FEF6EE;}' +
+    '.wc:last-child{margin-bottom:0;}' +
+    '.sb{font-family:var(--fm);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--clay);font-weight:600;margin-bottom:5px;display:block;}' +
+    '.wn-num{font-family:var(--fm);font-size:9.5px;letter-spacing:0.10em;color:var(--mute);font-weight:500;}' +
+    '.wn{font-family:var(--fd);font-size:18px;font-weight:600;letter-spacing:-0.01em;color:var(--ink);margin:4px 0 8px;}' +
+    '.wd{font-family:var(--fb);font-size:13.5px;line-height:1.5;color:var(--mute);margin-bottom:10px;}' +
+    '.rl{font-family:var(--fm);font-size:8.5px;letter-spacing:0.16em;text-transform:uppercase;color:var(--mute);font-weight:600;margin-bottom:3px;display:block;}' +
+    '.wr{font-family:var(--fb);font-size:13.5px;line-height:1.45;color:var(--ink2);margin-bottom:10px;}' +
+    '.wmt{font-family:var(--fm);font-size:9px;letter-spacing:0.10em;text-transform:uppercase;color:var(--mute);}' +
+    '.wb{padding:18px 22px;border-top:1px solid var(--line);}' +
+    '.wbl{font-family:var(--fm);font-size:9.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--mute);font-weight:600;margin-bottom:6px;display:block;}' +
+    '.wb p{font-size:13.5px;line-height:1.55;color:var(--mute);}' +
+    '.ct{width:100%;border-collapse:collapse;}' +
+    '.ct thead th{font-family:var(--fm);font-size:9.5px;letter-spacing:0.16em;text-transform:uppercase;color:var(--mute);font-weight:600;padding:0 16px 12px;border-bottom:1px solid var(--line);text-align:left;}' +
+    '.ct thead th:not(:first-child){text-align:right;}' +
+    '.ct thead th.hi{color:var(--forest);}' +
+    '.ct tbody td{padding:14px 16px;font-family:var(--fb);font-size:15px;color:var(--ink2);border-bottom:1px solid var(--line);vertical-align:middle;}' +
+    '.ct tbody td:not(:first-child){text-align:right;font-family:var(--fm);font-size:14px;letter-spacing:0.02em;}' +
+    '.ct tbody tr:nth-child(odd) td{background:var(--bone);}' +
+    '.ct tbody tr:last-child td{border-bottom:none;font-weight:600;font-size:16px;}' +
+    '.tl{font-family:var(--fm)!important;font-size:10px!important;letter-spacing:0.10em!important;text-transform:uppercase;color:var(--mute)!important;font-weight:500!important;}' +
+    '.red{color:#C0392B!important;}' +
+    '.grn{color:#1F7A4A!important;}' +
+    '.cp{background:var(--forest);border-radius:10px;padding:26px 30px;}' +
+    '.cp p{font-family:var(--fb);font-size:15px;line-height:1.55;color:rgba(255,255,255,0.82);margin-bottom:16px;}' +
+    '.pills{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:16px;}' +
+    '.pill{font-family:var(--fm);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--sage);border:1px solid var(--line-d);border-radius:4px;padding:5px 12px;}' +
+    '.cc{font-family:var(--fm);font-size:11px;letter-spacing:0.12em;color:var(--sage);line-height:1.9;}' +
+    '.disc{padding-top:16px;border-top:1px solid var(--line);}' +
+    '.disc p{font-size:11.5px;color:var(--mute);line-height:1.5;}' +
+    '</style>';
 
-  var p1 = '<div class="page">' + hdr(1) +
-    '<div class="body">' +
-    '<div style="font-size:8pt;color:#616657;letter-spacing:0.04em;margin-bottom:14pt;">Prepared for <strong>' + esc(name) + '</strong> &middot; ' + date + '</div>' +
-    '<h1 style="font-size:17pt;font-weight:bold;color:#1F4A37;line-height:1.25;margin-bottom:12pt;">Your WhatsApp is losing you<br><span style="color:#D4956B;">' + esc(fmtAED(calc.monthlyLoss)) + '</span> every month.</h1>' +
-    '<p style="font-size:9pt;color:#616657;line-height:1.55;margin-bottom:18pt;max-width:440pt;">' + esc(diagnosis) + '</p>' +
-    '<div style="font-size:7.5pt;letter-spacing:0.1em;color:#1F4A37;font-weight:bold;margin-bottom:8pt;">YOUR SITUATION</div>' +
-    '<table style="width:100%;border-collapse:collapse;">' + sitTable + '</table>' +
-    '<div style="background:#1F4A37;color:#FAFAF7;padding:20pt 28pt;display:flex;justify-content:space-between;align-items:center;border-radius:4pt;margin-top:auto;">' +
-      '<div><div style="font-size:7pt;letter-spacing:0.1em;opacity:0.65;margin-bottom:4pt;">MONTHLY REVENUE LEAK</div><div style="font-size:24pt;font-weight:bold;color:#D4956B;line-height:1;">' + esc(fmtAED(calc.monthlyLoss)) + '</div></div>' +
-      '<div style="text-align:right;"><div style="font-size:7pt;letter-spacing:0.1em;opacity:0.65;margin-bottom:4pt;">PER WEEK</div><div style="font-size:15pt;font-weight:bold;line-height:1;">' + esc(fmtAED(calc.weeklyLoss)) + '</div><div style="font-size:7pt;opacity:0.65;margin-top:3pt;">AED ' + (calc.monthlyLoss * 12).toLocaleString('en-US') + ' per year</div></div>' +
-    '</div>' +
-    '</div>' + ftr(1) + '</div>';
+  var head = '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">' +
+    '<link rel="preconnect" href="https://fonts.googleapis.com">' +
+    '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' +
+    '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">' +
+    css +
+    '</head><body>';
 
-  var p2 = '<div class="page">' + hdr(2) +
-    '<div class="body">' +
-    '<div style="font-size:8pt;color:#D4956B;letter-spacing:0.08em;font-weight:bold;margin-bottom:5pt;">RECOMMENDED FOR ' + esc(name.toUpperCase()) + "'S BUSINESS</div>" +
-    '<h2 style="font-size:13pt;font-weight:bold;color:#1F4A37;line-height:1.3;margin-bottom:5pt;">Three workflows that would fix your specific gap.</h2>' +
-    '<p style="font-size:8.5pt;color:#616657;margin-bottom:14pt;line-height:1.45;">Based on your ' + esc(industryName) + ' business, ' + esc(respObj.readable) + ', and ' + esc(covObj.readable) + '.</p>' +
-    wCards +
-    '<div style="border-top:1pt solid #D8D5CE;padding-top:12pt;margin-top:auto;">' +
-      '<div style="font-size:7.5pt;letter-spacing:0.1em;color:#1F4A37;font-weight:bold;margin-bottom:5pt;">WHY THESE THREE</div>' +
-      '<p style="font-size:8.5pt;color:#616657;line-height:1.5;">' + esc(whyThree) + '</p>' +
-    '</div>' +
-    '</div>' + ftr(2) + '</div>';
-
-  var p3 = '<div class="page">' + hdr(3) +
-    '<div class="body">' +
-    '<div style="font-size:8pt;color:#616657;letter-spacing:0.08em;font-weight:bold;margin-bottom:5pt;">THE COMPARISON</div>' +
-    '<h2 style="font-size:13pt;font-weight:bold;color:#1F4A37;line-height:1.3;margin-bottom:16pt;">The numbers, side by side.</h2>' +
-    '<table style="width:100%;border-collapse:collapse;margin-bottom:18pt;">' +
-      '<thead><tr style="background:#1F4A37;color:#FAFAF7;">' +
-        '<th style="padding:9pt 12pt;text-align:left;font-size:8pt;width:34%;"></th>' +
-        '<th style="padding:9pt 12pt;text-align:right;font-size:7.5pt;letter-spacing:0.06em;font-weight:bold;">DOING NOTHING</th>' +
-        '<th style="padding:9pt 12pt;text-align:right;font-size:7.5pt;letter-spacing:0.06em;font-weight:bold;">STARTING THE PILOT</th>' +
-      '</tr></thead><tbody>' + cTable + '</tbody></table>' +
-    '<div style="background:#1F4A37;color:#FAFAF7;padding:18pt 26pt;border-radius:4pt;margin-bottom:16pt;line-height:1.65;">' +
-      '<p style="font-size:8.5pt;margin-bottom:3pt;">Every month you wait costs you <strong style="color:#D4956B;">' + esc(fmtAED(calc.monthlyLoss)) + '</strong>.</p>' +
-      '<p style="font-size:8.5pt;margin-bottom:3pt;">Every month with the pilot costs you <strong>AED 5,000</strong>.</p>' +
-      '<p style="font-size:8.5pt;">The difference is <strong style="color:#D4956B;">' + esc(fmtAED(Math.max(netWithPilot, 0))) + '</strong>.</p>' +
-    '</div>' +
-    '<div style="display:flex;gap:20pt;margin-bottom:18pt;">' +
-      '<div style="text-align:center;flex:1;border:1pt solid #D8D5CE;padding:12pt 8pt;border-radius:3pt;"><div style="font-size:15pt;font-weight:bold;color:#1F4A37;line-height:1;">AED 0</div><div style="font-size:7pt;color:#616657;letter-spacing:0.06em;margin-top:4pt;">TO START</div></div>' +
-      '<div style="text-align:center;flex:1;border:1pt solid #D8D5CE;padding:12pt 8pt;border-radius:3pt;"><div style="font-size:15pt;font-weight:bold;color:#1F4A37;line-height:1;">48 HRS</div><div style="font-size:7pt;color:#616657;letter-spacing:0.06em;margin-top:4pt;">TO GO LIVE</div></div>' +
-      '<div style="text-align:center;flex:1;border:1pt solid #D8D5CE;padding:12pt 8pt;border-radius:3pt;"><div style="font-size:15pt;font-weight:bold;color:#1F4A37;line-height:1;">0</div><div style="font-size:7pt;color:#616657;letter-spacing:0.06em;margin-top:4pt;">CONTRACTS</div></div>' +
-    '</div>' +
-    '<div style="border-top:1pt solid #D8D5CE;padding-top:12pt;margin-top:auto;">' +
-      '<div style="font-size:7.5pt;letter-spacing:0.1em;color:#1F4A37;font-weight:bold;margin-bottom:8pt;">YOUR NEXT STEP</div>' +
-      '<div style="display:flex;gap:28pt;margin-bottom:10pt;">' +
-        '<div><div style="font-size:8pt;color:#616657;margin-bottom:2pt;">WhatsApp</div><div style="font-size:9pt;font-weight:bold;">+44 7842 552606</div></div>' +
-        '<div><div style="font-size:8pt;color:#616657;margin-bottom:2pt;">Instagram</div><div style="font-size:9pt;font-weight:bold;">@ibrahim.prompted</div></div>' +
+  // ─────────────── PAGE 1: YOUR SITUATION ───────────────
+  var p1 = '<div class="page">' +
+    masthead(1) +
+    '<div class="bd">' +
+      '<div class="blk">' +
+        '<span class="ey">Prepared for ' + esc(name) + ' &middot; ' + date + '</span>' +
+        '<h1>Your WhatsApp is losing you ' + esc(fmtAED(calc.monthlyLoss)) + ' every month.</h1>' +
+        '<p>' + esc(diagnosis) + '</p>' +
       '</div>' +
-      '<div style="font-size:7.5pt;color:#9A9A8A;">Prepared for ' + esc(name) + ' &middot; ' + date + ' &middot; Ibrahim Digital Solutions &middot; Dubai</div>' +
+      '<div class="blk">' +
+        '<span class="ey st-head">Your situation</span>' +
+        '<table class="st"><tbody>' + sitTable + '</tbody></table>' +
+      '</div>' +
+      '<div class="blk">' +
+        '<div class="lp">' +
+          '<div class="li">' +
+            '<span class="ll">Monthly revenue at risk</span>' +
+            '<div class="lf">' + esc(fmtAED(calc.monthlyLoss)) + '</div>' +
+            '<div class="ls">from missed enquiries</div>' +
+          '</div>' +
+          '<div class="li">' +
+            '<span class="ll">Weekly exposure</span>' +
+            '<div class="lf" style="font-size:30px;">' + esc(fmtAED(calc.weeklyLoss)) + '</div>' +
+            '<div class="ls">per week of delay</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
     '</div>' +
-    '</div>' + ftr(3) + '</div>';
+    footer(1, 'Confidential') +
+  '</div>';
 
-  return css + p1 + p2 + p3 + '</body></html>';
+  // ─────────────── PAGE 2: WORKFLOWS ───────────────
+  var p2 = '<div class="page">' +
+    masthead(2) +
+    '<div class="bd">' +
+      '<div class="blk">' +
+        '<span class="ey">Recommended for ' + esc(name) + "'s business</span>" +
+        '<h2>Three workflows that fix your specific gap.</h2>' +
+        '<p style="font-size:13.5px;color:var(--mute);">Based on your ' + esc(industryName) + ' business, ' + esc(respObj.readable) + ', and ' + esc(covObj.readable) + '.</p>' +
+      '</div>' +
+      '<div class="blk">' + wCards + '</div>' +
+      '<div class="blk">' +
+        '<div class="wb">' +
+          '<span class="wbl">Why these three</span>' +
+          '<p>' + esc(whyThree) + '</p>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    footer(2, 'Confidential') +
+  '</div>';
+
+  // ─────────────── PAGE 3: THE NUMBERS ───────────────
+  var p3 = '<div class="page">' +
+    masthead(3) +
+    '<div class="bd">' +
+      '<div class="blk">' +
+        '<span class="ey">The numbers</span>' +
+        '<h2>Side by side.</h2>' +
+      '</div>' +
+      '<div class="blk">' +
+        '<table class="ct">' +
+          '<thead><tr><th></th><th>No automation</th><th class="hi">With pilot</th></tr></thead>' +
+          '<tbody>' + cTable + '</tbody>' +
+        '</table>' +
+      '</div>' +
+      '<div class="blk">' +
+        '<div class="cp">' +
+          '<p>Every month you wait costs you ' + esc(fmtAED(calc.monthlyLoss)) + '. Three workflows. Live in 48 hours. AED 0 to start.</p>' +
+          '<div class="pills">' +
+            '<div class="pill">AED 0 to start</div>' +
+            '<div class="pill">48 hrs to live</div>' +
+            '<div class="pill">No contract</div>' +
+          '</div>' +
+          '<div class="cc">WhatsApp &nbsp;+44 7842 552606<br>Instagram &nbsp;@ibrahim.prompted</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="blk">' +
+        '<div class="disc">' +
+          '<p>Loss figures are calculated from your reported response time, coverage window, weekly enquiry volume, and average deal value. Figures represent estimated revenue at risk based on UAE market conversion benchmarks.</p>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    footer(3, 'ibrahimdigital.com') +
+  '</div>';
+
+  return head + p1 + p2 + p3 + '</body></html>';
 }
 
 // ── Main handler ──────────────────────────────────────────────────────────────

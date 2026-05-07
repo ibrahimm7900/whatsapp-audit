@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>WhatsApp Revenue Audit · Ibrahim</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+
+:root {
+  --forest:    #1F4A37;
+  --sage:      #8FA695;
+  --clay:      #D4956B;
+  --paper:     #FAFAF7;
+  --bone:      #F2F1EC;
+  --stone:     #E6E4DC;
+  --ink:       #0E0E0C;
+  --ink2:      #2A2A26;
+  --mute:      #6E6E68;
+  --line:      rgba(14,14,12,0.10);
+  --line-d:    rgba(250,250,247,0.18);
+  --fd:        "Inter Tight", Helvetica, sans-serif;
+  --fb:        "Inter", Helvetica, sans-serif;
+  --fm:        "Geist Mono", monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+@page { size: A4 portrait; margin: 0; }
+html, body { background: var(--stone); }
+
+.page {
+  width: 210mm;
+  height: 290mm;
+  background: var(--paper);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  page-break-inside: avoid;
+  break-inside: avoid;
+  margin: 0 auto;
+}
+.page + .page { page-break-before: always; break-before: page; }
+@media print {
+  html, body { background: var(--paper); }
+}
+
+/* Masthead */
+.mh {
+  background: var(--forest);
+  padding: 14px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.lk { display: inline-flex; align-items: center; gap: 10px; }
+.dd { display: inline-flex; gap: 4px; }
+.dd s {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--sage); display: block;
+}
+.dd s:last-child { opacity: 0.4; }
+.wm {
+  font-family: var(--fd); font-size: 18px; font-weight: 600;
+  letter-spacing: -0.02em; color: #fff;
+}
+.wm b { font-weight: 600; color: var(--clay); font-style: normal; }
+.mm {
+  font-family: var(--fm); font-size: 9.5px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--sage);
+}
+
+/* Body — grouped content blocks distributed vertically */
+.bd {
+  flex: 1;
+  padding: 32px 36px 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Each .blk is one vertical group; gap between blocks fills the page */
+.blk { display: block; }
+
+/* Eyebrow */
+.ey {
+  font-family: var(--fm); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--forest); display: block; margin-bottom: 10px;
+}
+
+h1 {
+  font-family: var(--fd); font-size: 44px; font-weight: 500;
+  letter-spacing: -0.03em; line-height: 1.05;
+  color: var(--ink); margin-bottom: 18px;
+}
+h2 {
+  font-family: var(--fd); font-size: 30px; font-weight: 600;
+  letter-spacing: -0.02em; line-height: 1.15;
+  color: var(--ink); margin-bottom: 10px;
+}
+
+p {
+  font-family: var(--fb); font-size: 15px;
+  line-height: 1.6; color: var(--ink2);
+}
+
+/* Situation table */
+.st { width: 100%; border-collapse: collapse; }
+.st tr:nth-child(odd)  td { background: var(--bone); }
+.st tr:nth-child(even) td { background: var(--paper); }
+.st td {
+  padding: 14px 18px;
+  font-family: var(--fb); font-size: 15px; line-height: 1.4;
+  color: var(--ink2); border-bottom: 1px solid var(--line);
+}
+.st td:first-child {
+  font-family: var(--fm); font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--mute); font-weight: 500; width: 44%;
+}
+.st tr:last-child td { border-bottom: none; }
+
+/* Situation block heading sits 16px above the table */
+.st-head { margin-bottom: 12px; }
+
+/* Loss panel */
+.lp {
+  background: var(--forest); border-radius: 10px;
+  padding: 26px 30px;
+  display: flex; align-items: stretch;
+}
+.li { flex: 1; padding-right: 22px; }
+.li + .li { padding-right: 0; padding-left: 22px; border-left: 1px solid var(--line-d); }
+.ll {
+  font-family: var(--fm); font-size: 9.5px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--sage);
+  margin-bottom: 8px; display: block;
+}
+.lf {
+  font-family: var(--fd); font-size: 38px; font-weight: 500;
+  letter-spacing: -0.03em; line-height: 1; color: var(--clay);
+}
+.ls {
+  font-family: var(--fb); font-size: 13px;
+  color: rgba(255,255,255,0.55); margin-top: 6px;
+}
+
+/* Footer */
+.ft {
+  padding: 14px 32px; border-top: 1px solid var(--line);
+  display: flex; justify-content: space-between; align-items: center;
+  flex-shrink: 0;
+}
+.ft span {
+  font-family: var(--fm); font-size: 9.5px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--mute);
+}
+.ft span:last-child { text-align: right; }
+
+/* Workflow cards */
+.wc {
+  border-left: 3px solid var(--line); border-radius: 0 8px 8px 0;
+  padding: 18px 22px; margin-bottom: 12px; background: var(--bone);
+}
+.wc.sh { border-left-color: var(--clay); background: #FEF6EE; }
+.wc:last-child { margin-bottom: 0; }
+.sb {
+  font-family: var(--fm); font-size: 9px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--clay);
+  font-weight: 600; margin-bottom: 5px; display: block;
+}
+.wn-num {
+  font-family: var(--fm); font-size: 9.5px; letter-spacing: 0.10em;
+  color: var(--mute); font-weight: 500;
+}
+.wn {
+  font-family: var(--fd); font-size: 18px; font-weight: 600;
+  letter-spacing: -0.01em; color: var(--ink); margin: 4px 0 8px;
+}
+.wd {
+  font-family: var(--fb); font-size: 13.5px; line-height: 1.5;
+  color: var(--mute); margin-bottom: 10px;
+}
+.rl {
+  font-family: var(--fm); font-size: 8.5px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--mute);
+  font-weight: 600; margin-bottom: 3px; display: block;
+}
+.wr {
+  font-family: var(--fb); font-size: 13.5px; line-height: 1.45;
+  color: var(--ink2); margin-bottom: 10px;
+}
+.wmt {
+  font-family: var(--fm); font-size: 9px; letter-spacing: 0.10em;
+  text-transform: uppercase; color: var(--mute);
+}
+
+/* Why block */
+.wb { padding: 18px 22px; border-top: 1px solid var(--line); }
+.wbl {
+  font-family: var(--fm); font-size: 9.5px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--mute);
+  font-weight: 600; margin-bottom: 6px; display: block;
+}
+.wb p { font-size: 13.5px; line-height: 1.55; color: var(--mute); }
+
+/* Comparison table */
+.ct { width: 100%; border-collapse: collapse; }
+.ct thead th {
+  font-family: var(--fm); font-size: 9.5px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--mute); font-weight: 600;
+  padding: 0 16px 12px; border-bottom: 1px solid var(--line); text-align: left;
+}
+.ct thead th:not(:first-child) { text-align: right; }
+.ct thead th.hi { color: var(--forest); }
+.ct tbody td {
+  padding: 14px 16px; font-family: var(--fb); font-size: 15px;
+  color: var(--ink2); border-bottom: 1px solid var(--line); vertical-align: middle;
+}
+.ct tbody td:not(:first-child) {
+  text-align: right; font-family: var(--fm);
+  font-size: 14px; letter-spacing: 0.02em;
+}
+.ct tbody tr:nth-child(odd) td { background: var(--bone); }
+.ct tbody tr:last-child td { border-bottom: none; font-weight: 600; font-size: 16px; }
+.tl {
+  font-family: var(--fm) !important; font-size: 10px !important;
+  letter-spacing: 0.10em !important; text-transform: uppercase;
+  color: var(--mute) !important; font-weight: 500 !important;
+}
+.red { color: #C0392B !important; }
+.grn { color: #1F7A4A !important; }
+
+/* CTA panel */
+.cp {
+  background: var(--forest); border-radius: 10px;
+  padding: 26px 30px;
+}
+.cp p {
+  font-family: var(--fb); font-size: 15px; line-height: 1.55;
+  color: rgba(255,255,255,0.82); margin-bottom: 16px;
+}
+.pills { display: flex; gap: 9px; flex-wrap: wrap; margin-bottom: 16px; }
+.pill {
+  font-family: var(--fm); font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--sage);
+  border: 1px solid var(--line-d); border-radius: 4px; padding: 5px 12px;
+}
+.cc {
+  font-family: var(--fm); font-size: 11px; letter-spacing: 0.12em;
+  color: var(--sage); line-height: 1.9;
+}
+
+.disc { padding-top: 16px; border-top: 1px solid var(--line); }
+.disc p { font-size: 11.5px; color: var(--mute); line-height: 1.5; }
+
+/* Title group — keeps eyebrow+h1+lead paragraph as one block */
+.title-group .lead { margin-top: 0; }
+
+</style>
+</head>
+<body>
+
+<!-- ─────────────────────── PAGE 1: YOUR SITUATION ─────────────────────── -->
+<div class="page">
+  <div class="mh">
+    <div class="lk">
+      <div class="dd"><s></s><s></s></div>
+      <div class="wm">ibrahim<b> /</b> digital</div>
+    </div>
+    <div class="mm">Whatsapp Revenue Audit &middot; 01 / 03</div>
+  </div>
+
+  <div class="bd">
+
+    <div class="blk title-group">
+      <span class="ey">Prepared for Ibrahim &middot; 7 May 2026</span>
+      <h1>Your WhatsApp is losing you AED&nbsp;41,800 every month.</h1>
+      <p class="lead">You're available roughly 45 hours per week. Your leads come in 168 hours per week. The gap — evenings, Fridays, weekends — is where your revenue is going. Every hour offline is an hour a competitor can reply first.</p>
+    </div>
+
+    <div class="blk">
+      <span class="ey st-head">Your situation</span>
+      <table class="st">
+        <tbody>
+          <tr><td>Industry</td><td>Real estate</td></tr>
+          <tr><td>Average commission value</td><td>AED 2,000</td></tr>
+          <tr><td>Weekly enquiries</td><td>25 messages</td></tr>
+          <tr><td>Response time</td><td>4&ndash;24 hours</td></tr>
+          <tr><td>Coverage</td><td>Weekdays only</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="blk">
+      <div class="lp">
+        <div class="li">
+          <span class="ll">Monthly revenue at risk</span>
+          <div class="lf">AED 41,800</div>
+          <div class="ls">from missed enquiries</div>
+        </div>
+        <div class="li">
+          <span class="ll">Weekly exposure</span>
+          <div class="lf" style="font-size:30px;">AED 9,700</div>
+          <div class="ls">per week of delay</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="ft">
+    <span>Ibrahim Digital &middot; Dubai</span>
+    <span>01 / 03</span>
+    <span>Confidential</span>
+  </div>
+</div>
+
+
+<!-- ─────────────────────── PAGE 2: WORKFLOWS ─────────────────────── -->
+<div class="page">
+  <div class="mh">
+    <div class="lk">
+      <div class="dd"><s></s><s></s></div>
+      <div class="wm">ibrahim<b> /</b> digital</div>
+    </div>
+    <div class="mm">Whatsapp Revenue Audit &middot; 02 / 03</div>
+  </div>
+
+  <div class="bd">
+
+    <div class="blk">
+      <span class="ey">Recommended for Ibrahim's business</span>
+      <h2>Three workflows that fix your specific gap.</h2>
+      <p style="font-size:13.5px; color:var(--mute);">Based on your real estate business, 4&ndash;24 hour response times, and weekday-only availability.</p>
+    </div>
+
+    <div class="blk">
+      <div class="wc sh">
+        <span class="sb">&#9733; Start here</span>
+        <div class="wn-num">01</div>
+        <div class="wn">After-hours responder</div>
+        <p class="wd">Replies to every enquiry that comes in outside your working hours instantly, in the buyer's language.</p>
+        <span class="rl">Recovers</span>
+        <p class="wr">Captures the 35–45% of inbound leads currently lost to after-hours silence.</p>
+        <div class="wmt">Low complexity &middot; Live in 48 hours</div>
+      </div>
+
+      <div class="wc">
+        <div class="wn-num">02</div>
+        <div class="wn">Lead qualifier</div>
+        <p class="wd">Asks the three questions that separate serious buyers from tyre-kickers before you spend a minute.</p>
+        <span class="rl">Recovers</span>
+        <p class="wr">Cuts wasted WhatsApp time on non-buyers from 60% to under 20%.</p>
+        <div class="wmt">Low complexity &middot; Live in 48 hours</div>
+      </div>
+
+      <div class="wc">
+        <div class="wn-num">03</div>
+        <div class="wn">Viewing scheduler</div>
+        <p class="wd">Takes an enquiry from first message to a booked property viewing with no agent involvement.</p>
+        <span class="rl">Recovers</span>
+        <p class="wr">Recovers 2 viewings per month that convert.</p>
+        <div class="wmt">Low complexity &middot; Live in 48 hours</div>
+      </div>
+    </div>
+
+    <div class="blk">
+      <div class="wb">
+        <span class="wbl">Why these three</span>
+        <p>You handle high-value real estate leads in a market where the first reply wins. With 25 enquiries per week and 4–24 hour response times, your biggest gap is coverage — leads going cold while you're offline. These three workflows address that gap in order of ROI.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="ft">
+    <span>Ibrahim Digital &middot; Dubai</span>
+    <span>02 / 03</span>
+    <span>Confidential</span>
+  </div>
+</div>
+
+
+<!-- ─────────────────────── PAGE 3: THE NUMBERS ─────────────────────── -->
+<div class="page">
+  <div class="mh">
+    <div class="lk">
+      <div class="dd"><s></s><s></s></div>
+      <div class="wm">ibrahim<b> /</b> digital</div>
+    </div>
+    <div class="mm">Whatsapp Revenue Audit &middot; 03 / 03</div>
+  </div>
+
+  <div class="bd">
+
+    <div class="blk">
+      <span class="ey">The numbers</span>
+      <h2>Side by side.</h2>
+    </div>
+
+    <div class="blk">
+      <table class="ct">
+        <thead>
+          <tr>
+            <th></th>
+            <th>No automation</th>
+            <th class="hi">With pilot</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="tl">Setup cost</td><td>AED 0</td><td>AED 0</td></tr>
+          <tr><td class="tl">Monthly cost</td><td>AED 0</td><td>AED 5,000</td></tr>
+          <tr><td class="tl">Monthly loss</td><td>AED 41,800</td><td>AED 10,500</td></tr>
+          <tr><td class="tl">Net position</td><td class="red">&minus;AED 41,800</td><td class="grn">+AED 26,300</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="blk">
+      <div class="cp">
+        <p>Every month you wait costs you AED 41,800. Three workflows. Live in 48 hours. AED 0 to start.</p>
+        <div class="pills">
+          <div class="pill">AED 0 to start</div>
+          <div class="pill">48 hrs to live</div>
+          <div class="pill">No contract</div>
+        </div>
+        <div class="cc">
+          WhatsApp &nbsp;+44 7842 552606<br>
+          Instagram &nbsp;@ibrahim.prompted
+        </div>
+      </div>
+    </div>
+
+    <div class="blk">
+      <div class="disc">
+        <p>Loss figures are calculated from your reported response time, coverage window, weekly enquiry volume, and average deal value. Figures represent estimated revenue at risk based on UAE market conversion benchmarks.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="ft">
+    <span>Ibrahim Digital &middot; Dubai</span>
+    <span>03 / 03</span>
+    <span>ibrahimdigital.com</span>
+  </div>
+</div>
+
+</body>
+</html>
