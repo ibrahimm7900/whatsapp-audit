@@ -298,18 +298,18 @@ function CalculatingState() {
 // ─────────────────────────────────────────────────────────────
 function WelcomeScreen({ onStart }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%', padding: '78px 22px 22px' }}>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%', padding: '44px 22px 24px' }}>
+      <div>
         <div className="eyebrow" style={{ marginBottom: 14 }}>FREE · 60 SECONDS · NO SIGN-UP</div>
-        <h1 className="h-display" style={{ fontSize: 38, marginBottom: 14, lineHeight: 1.05 }}>
+        <h1 className="h-display" style={{ fontSize: 38, marginBottom: 16, lineHeight: 1.05 }}>
           How much revenue is your WhatsApp leaking?
         </h1>
-        <p style={{ fontSize: 15, color: 'var(--fg-3)', lineHeight: 1.5, marginBottom: 20 }}>
+        <p style={{ fontSize: 15, color: 'var(--fg-3)', lineHeight: 1.5, marginBottom: 32 }}>
           Five questions. One specific AED number.
           A free report on what to fix first — built for your business.
         </p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 0, borderTop: '1px solid var(--hairline)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0, borderTop: '1px solid var(--hairline)', maxWidth: 220, margin: '0 auto' }}>
           {[
             ['01', 'Your business'],
             ['02', 'Your numbers'],
@@ -317,13 +317,16 @@ function WelcomeScreen({ onStart }) {
             ['04', 'Your response'],
             ['05', 'Your coverage'],
           ].map(([n, label]) => (
-            <div key={n} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: '1px solid var(--hairline)', whiteSpace: 'nowrap' }}>
+            <div key={n} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, padding: '13px 0', borderBottom: '1px solid var(--hairline)', whiteSpace: 'nowrap' }}>
               <span className="eyebrow" style={{ fontSize: 10, color: 'var(--fg-4)' }}>{n}</span>
               <span style={{ fontFamily: 'var(--font-display)', fontWeight: 500, fontSize: 14, color: 'var(--fg-2)' }}>{label}</span>
             </div>
           ))}
         </div>
       </div>
+
+      <div style={{ flex: 1, minHeight: 40 }} />
+
       <button type="button" onClick={onStart} className="btn btn-primary btn-final">
         Start the audit <span style={{ marginLeft: 4 }}>→</span>
       </button>
