@@ -2,7 +2,7 @@
 // Single-file plain JS Cloudflare Worker
 // Receives workflow vars -> scores workflows -> builds HTML -> PDFShift -> WhatsApp template
 
-const PHONE_NUMBER_ID  = '1162751303579401';
+const PHONE_NUMBER_ID  = '1160443047149035';
 const KAPSO_BASE       = 'https://api.kapso.ai';
 
 // ── Data ──────────────────────────────────────────────────────────────────────
