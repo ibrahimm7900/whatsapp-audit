@@ -3,36 +3,55 @@
     "report-delivery": {
       "files": {
         "functions\\report-delivery\\function.yaml": "d6650d9be5a1740c91152bf212686852b5daa5606f19387ebf551d791743d9e2",
-        "functions\\report-delivery\\index.js": "9acd40d24334c7a6f71f4a1651a20e1addc398bae62e16c141536786f382e47e"
+        "functions\\report-delivery\\index.js": "e71afa028847be6d677a4816ff0596193d934493cb81eb407d6a86c8ab9dd281"
       },
       "id": "5e3cf632-3094-46ec-a8b5-fa4584deb4f1",
       "lastDeployedAt": "2026-05-07T19:30:44-04:00",
-      "lockVersion": 48,
+      "lockVersion": 49,
       "slug": "report-delivery",
       "status": "deployed",
-      "updatedAt": "2026-05-07T19:30:44-04:00"
+      "updatedAt": "2026-06-04T14:08:49-04:00"
     }
   },
   "version": 1,
   "workflows": {
+    "ibrahim-digital-solutions-wa-agent": {
+      "files": {
+        "workflows\\ibrahim-digital-solutions-wa-agent\\definition.json": "2eb683c2df5545893a6cc1d8520bc335235538daea67724d80e6664716792f72",
+        "workflows\\ibrahim-digital-solutions-wa-agent\\workflow.yaml": "5a1e6d6135ccc4314487c43a0ec4431f7e2ee12edae46de6bada1dc20716b6a6"
+      },
+      "generatedSource": {
+        "hash": "2c98465cf1803d6b1341bd2ae2c5b32ba37c71c561ee318ddafde2f01f49c024",
+        "path": "workflows\\ibrahim-digital-solutions-wa-agent\\workflow.js"
+      },
+      "id": "d87587b4-bd6d-4c5a-9057-7679c0a07049",
+      "lockVersion": 2,
+      "slug": "ibrahim-digital-solutions-wa-agent",
+      "sourceFile": {
+        "hash": "2c98465cf1803d6b1341bd2ae2c5b32ba37c71c561ee318ddafde2f01f49c024",
+        "path": "workflows\\ibrahim-digital-solutions-wa-agent\\workflow.js"
+      },
+      "status": "draft",
+      "updatedAt": "2026-06-04T16:32:47-04:00"
+    },
     "report-sender": {
       "files": {
-        "workflows\\report-sender\\definition.json": "8fc23b2a358e6275e8b1b73170ac4130e1af5185ed7547b939cf43017b13e068",
+        "workflows\\report-sender\\definition.json": "669aa6e40eedc7906dc61a92c5fe121a6b1a760e2e35e285067ab63f8120deab",
         "workflows\\report-sender\\workflow.yaml": "20cff05a1ebb6b8fd496885a5730a9e311e322e3dad17059eaf9c4fc8a59b89a"
       },
       "generatedSource": {
-        "hash": "fc175ad93b6c195aa48cbc261a460c80e764158a5fe2a9e7a50f7cc344acef84",
+        "hash": "75333a6bb9d02d5af45ab8e7841068a0b744db276eb9c136145d32ef64087072",
         "path": "workflows\\report-sender\\workflow.js"
       },
       "id": "59e4a70f-cf3b-4b3a-9ee3-31fbf319d803",
-      "lockVersion": 8,
+      "lockVersion": 16,
       "slug": "report-sender",
       "sourceFile": {
-        "hash": "fc175ad93b6c195aa48cbc261a460c80e764158a5fe2a9e7a50f7cc344acef84",
+        "hash": "75333a6bb9d02d5af45ab8e7841068a0b744db276eb9c136145d32ef64087072",
         "path": "workflows\\report-sender\\workflow.js"
       },
       "status": "active",
-      "updatedAt": "2026-05-07T10:41:29-04:00"
+      "updatedAt": "2026-06-04T16:44:29-04:00"
     }
   }
 }

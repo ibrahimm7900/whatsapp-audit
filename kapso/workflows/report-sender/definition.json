@@ -5,6 +5,12 @@
       "source": "start",
       "target": "generate-and-send",
       "type": "default"
+    },
+    {
+      "label": "next",
+      "source": "generate-and-send",
+      "target": "call_1780605835053",
+      "type": "default"
     }
   ],
   "nodes": [
@@ -17,7 +23,7 @@
       "id": "start",
       "position": {
         "x": 100,
-        "y": 100
+        "y": 80
       },
       "type": "flow-node"
     },
@@ -35,6 +41,23 @@
       "position": {
         "x": 80,
         "y": 260
+      },
+      "type": "flow-node"
+    },
+    {
+      "data": {
+        "config": {
+          "save_error_to": "subworkflow_error",
+          "workflow_name": "IBRAHIM DIGITAL SOLUTIONS WA AGENT",
+          "workflow_slug": "ibrahim-digital-solutions-wa-agent"
+        },
+        "display_name": "Call Workflow: IBRAHIM DIGITAL SOLUTIONS WA AGENT",
+        "node_type": "call"
+      },
+      "id": "call_1780605835053",
+      "position": {
+        "x": 40,
+        "y": 440
       },
       "type": "flow-node"
     }

@@ -74,8 +74,6 @@ const WORKFLOWS = [
   { id:'ED-6', industry:'education', name:'New student onboarding', does:'On enrolment, automatic schedule, login, materials list, and welcome message from the instructor.', recovers:'Drops first-month dropout from 15% to 5%.', complexity:'Low', boost_fast_responder:1 },
 ];
 
-// ── Scoring ───────────────────────────────────────────────────────────────────
-
 function scoreWorkflows(inputs) {
   var candidates = WORKFLOWS.filter(function(w) { return w.industry === inputs.industry; });
   candidates = candidates.map(function(w) {
@@ -102,8 +100,6 @@ function fmtAED(n) {
   return 'AED ' + Math.round(n).toLocaleString('en-US');
 }
 
-// ── Diagnostics ───────────────────────────────────────────────────────────────
-
 function getDiagnosisParagraph(inputs, calc) {
   var fast = inputs.responseTime === 'under_1hr' || inputs.responseTime === '1_4hrs';
   var cov  = inputs.coverage;
@@ -127,8 +123,6 @@ function getWhyThreeParagraph(inputs, calc, industryName) {
     : 'speed - competitors replying first';
   return 'You handle ' + (inputs.dealValue >= 50000 ? 'high-value' : 'time-sensitive') + ' ' + industryName.toLowerCase() + ' leads in a market where the first reply wins. With ' + enq + ' enquiries per week and ' + calc.responseTimeReadable + ', your biggest gap is ' + gap + '. These three workflows address that gap in order of ROI.';
 }
-
-// ── HTML template ─────────────────────────────────────────────────────────────
 
 function esc(s) {
   return String(s)
@@ -166,7 +160,6 @@ function buildReportHTML(p) {
     '</div>';
   }
 
-  // Situation table rows
   var sitRows = [
     ['Industry', esc(industryName)],
     ['Average ' + esc(dealLabel) + ' value', 'AED ' + Number(dealValue).toLocaleString('en-US')],
@@ -178,7 +171,6 @@ function buildReportHTML(p) {
     return '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td></tr>';
   }).join('');
 
-  // Workflow cards
   var ords = ['01','02','03'];
   var wCards = workflows.map(function(w, i) {
     var sh = w.isStartHere ? ' sh' : '';
@@ -193,7 +185,6 @@ function buildReportHTML(p) {
     '</div>';
   }).join('');
 
-  // Comparison table rows
   var cRows = [
     ['Setup cost',   'AED 0',                              'AED 0',                                       null,    null],
     ['Monthly cost', 'AED 0',                              'AED 5,000',                                   null,    null],
@@ -206,7 +197,6 @@ function buildReportHTML(p) {
     return '<tr><td class="tl">' + r[0] + '</td><td' + c1 + '>' + r[1] + '</td><td' + c2 + '>' + r[2] + '</td></tr>';
   }).join('');
 
-  // Inlined Signal brand styles (forked from report-preview.html)
   var css = '<style>' +
     ':root{--forest:#1F4A37;--sage:#8FA695;--clay:#D4956B;--paper:#FAFAF7;--bone:#F2F1EC;--stone:#E6E4DC;--ink:#0E0E0C;--ink2:#2A2A26;--mute:#6E6E68;--line:rgba(14,14,12,0.10);--line-d:rgba(250,250,247,0.18);--fd:"Inter Tight",Helvetica,sans-serif;--fb:"Inter",Helvetica,sans-serif;--fm:"Geist Mono",monospace;}' +
     '*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}' +
@@ -284,7 +274,6 @@ function buildReportHTML(p) {
     css +
     '</head><body>';
 
-  // ─────────────── PAGE 1: YOUR SITUATION ───────────────
   var p1 = '<div class="page">' +
     masthead(1) +
     '<div class="bd">' +
@@ -315,7 +304,6 @@ function buildReportHTML(p) {
     footer(1, 'Confidential') +
   '</div>';
 
-  // ─────────────── PAGE 2: WORKFLOWS ───────────────
   var p2 = '<div class="page">' +
     masthead(2) +
     '<div class="bd">' +
@@ -335,7 +323,6 @@ function buildReportHTML(p) {
     footer(2, 'Confidential') +
   '</div>';
 
-  // ─────────────── PAGE 3: THE NUMBERS ───────────────
   var p3 = '<div class="page">' +
     masthead(3) +
     '<div class="bd">' +
@@ -371,8 +358,6 @@ function buildReportHTML(p) {
 
   return head + p1 + p2 + p3 + '</body></html>';
 }
-
-// ── Main handler ──────────────────────────────────────────────────────────────
 
 async function handler(request, env) {
   var body;
@@ -424,7 +409,6 @@ async function handler(request, env) {
     coverageReadable:          covObj.readable,
   };
 
-  // 1. Build HTML -> PDF via PDFShift
   var htmlString = buildReportHTML({
     name:            lead_name,
     industryName:    industry_name || industry,
@@ -452,7 +436,6 @@ async function handler(request, env) {
   }
   var pdfBuffer = await pdfRes.arrayBuffer();
 
-  // 2. Upload PDF to WhatsApp via Kapso
   var fileName = 'Revenue-Report-' + lead_name.replace(/\s+/g, '-') + '.pdf';
   var form = new FormData();
   form.append('messaging_product', 'whatsapp');
@@ -470,7 +453,6 @@ async function handler(request, env) {
   }
   var mediaId = (await uploadRes.json()).id;
 
-  // 3. Send via approved template (works for cold leads outside 24hr window)
   var templateRes = await fetch(
     KAPSO_BASE + '/meta/whatsapp/v24.0/' + PHONE_NUMBER_ID + '/messages',
     {
