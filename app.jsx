@@ -8,6 +8,21 @@ const KAPSO_API_BASE    = 'https://api.kapso.ai/platform/v1';
 const KAPSO_WORKFLOW_ID = '59e4a70f-cf3b-4b3a-9ee3-31fbf319d803';
 const KAPSO_PUBLIC_KEY  = '58f988d84e4310ceb5eb3202457289824e662cc40a03f37d0a913de290982c5b';
 
+// ── UTM attribution ───────────────────────────────────────────
+// Captured once at page load — this is a single-page app, so the landing
+// URL's query string is the ad/creative that drove the visit.
+const IDS_UTMS = (() => {
+  try {
+    const p = new URLSearchParams(window.location.search);
+    const out = {};
+    ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'].forEach((k) => {
+      const v = p.get(k);
+      if (v) out[k] = v;
+    });
+    return out;
+  } catch (e) { return {}; }
+})();
+
 // ─────────────────────────────────────────────────────────────
 // Calculator state machine
 // ─────────────────────────────────────────────────────────────
@@ -91,12 +106,14 @@ function useCalculator(initial = {}) {
           coverage_id:       inputs.coverage,
           loss_rate_pct:     calc.lossRatePercent,
           coverage_mult_pct: calc.coverageMultiplierPercent,
+          // Ad attribution — which creative/campaign drove this audit (empty if organic)
+          ...IDS_UTMS,
         },
       },
     };
 
     try {
-      await fetch(
+      const res = await fetch(
         `${KAPSO_API_BASE}/workflows/${KAPSO_WORKFLOW_ID}/executions`,
         {
           method: 'POST',
@@ -107,6 +124,14 @@ function useCalculator(initial = {}) {
           body: JSON.stringify(kapsoPayload),
         }
       );
+      // Fire the Meta conversion ONLY on a genuinely successful submission
+      // (delivery accepted) — not on click, not on a failed request.
+      if (res && res.ok && typeof window !== 'undefined' && window.fbq) {
+        window.fbq('track', 'Lead', {
+          content_name: 'whatsapp_audit',
+          content_category: 'audit',
+        });
+      }
     } catch (err) {
       // Log but don't block — user still sees success screen
       console.error('[Kapso] delivery failed:', err);
