@@ -113,17 +113,14 @@ function useCalculator(initial = {}) {
     };
 
     try {
-      const res = await fetch(
-        `${KAPSO_API_BASE}/workflows/${KAPSO_WORKFLOW_ID}/executions`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-API-Key': KAPSO_PUBLIC_KEY,
-          },
-          body: JSON.stringify(kapsoPayload),
-        }
-      );
+      // Same-origin proxy (api/submit-audit.js) → Kapso. Direct browser calls
+      // to api.kapso.ai are CORS-blocked, which would send us into catch and
+      // skip both delivery and the Lead conversion below.
+      const res = await fetch('/api/submit-audit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(kapsoPayload),
+      });
       // Fire the Meta conversion ONLY on a genuinely successful submission
       // (delivery accepted) — not on click, not on a failed request.
       if (res && res.ok && typeof window !== 'undefined' && window.fbq) {
