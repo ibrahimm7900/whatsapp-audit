@@ -1,0 +1,268 @@
+/* motion.css — Fable motion layer for the WhatsApp Revenue Audit.
+   Transform/opacity only (GPU-cheap on mobile). Everything is gated
+   on prefers-reduced-motion at the bottom of this file. */
+
+:root {
+  --spring:      cubic-bezier(0.34, 1.3, 0.4, 1);
+  --spring-soft: cubic-bezier(0.22, 1.18, 0.34, 1);
+  --ease-out:    cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* ── Mobile feel ─────────────────────────────────────── */
+html, body { -webkit-tap-highlight-color: transparent; overscroll-behavior: none; }
+button { touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+/* 16px+ prevents iOS Safari zoom-on-focus */
+.form-input { font-size: 16px !important; }
+
+/* ── Staggered reveal ────────────────────────────────── */
+.rv {
+  opacity: 0;
+  transform: translateY(14px);
+  animation: rv-in 560ms var(--ease-out) forwards;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes rv-in { to { opacity: 1; transform: none; } }
+
+/* Kinetic headline — line masks */
+.mask-line { display: block; overflow: hidden; }
+.mask-line > span {
+  display: block;
+  transform: translateY(112%);
+  animation: line-up 640ms var(--ease-out) forwards;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes line-up { to { transform: none; } }
+
+/* ── Two-plane depth transitions ─────────────────────────
+   Forward: outgoing recedes (scale + blur + fade) while the
+   incoming pane rises from below on a soft spring. Back runs
+   the same stack in reverse. Panes are transparent so the
+   leak-field ambient layer shows through between steps. */
+.pane { position: absolute; inset: 0; overflow-y: auto; background: transparent; }
+.pane-in-fwd   { animation: pane-in-fwd  520ms var(--spring-soft); }
+.pane-in-back  { animation: pane-in-back 420ms var(--ease-out); }
+.pane-out-fwd  { animation: pane-out-fwd  320ms var(--ease-out) forwards; pointer-events: none; }
+.pane-out-back { animation: pane-out-back 300ms var(--ease-out) forwards; pointer-events: none; }
+@keyframes pane-in-fwd   { from { opacity: 0; transform: translateY(30px) scale(0.985); } }
+@keyframes pane-in-back  { from { opacity: 0; transform: scale(0.96); filter: blur(2px); } }
+@keyframes pane-out-fwd  { to { opacity: 0; transform: scale(0.96); filter: blur(2px); } }
+@keyframes pane-out-back { to { opacity: 0; transform: translateY(26px) scale(0.99); } }
+
+/* Exiting pane: skip inner reveal choreography, jump to end state */
+.no-anim .rv,
+.no-anim .mask-line > span,
+.no-anim .num-settle,
+.no-anim .tick-pop { animation-duration: 0ms !important; animation-delay: 0ms !important; }
+
+/* ── Cards / pills — press + settle + green wash ─────── */
+.card-selectable { position: relative; overflow: hidden; transition: background 300ms var(--ease-out), border-color 300ms var(--ease-out); }
+.card-selectable:active { transform: scale(0.97); }
+
+/* Selected industry card inverts to forest — a decisive flip
+   instead of a subtle tint. Must out-rank .card-selected's
+   green-soft !important in signal.css. */
+.card-forest.card-selected {
+  background: var(--forest) !important;
+  border-color: var(--forest) !important;
+}
+.card-forest.card-selected::after {
+  background: radial-gradient(circle at 50% 50%, rgba(212,149,107,0.4), rgba(212,149,107,0.12) 55%, transparent 72%);
+}
+.card-selected::after {
+  content: '';
+  position: absolute; inset: -4px;
+  border-radius: inherit;
+  background: radial-gradient(circle at 50% 50%, rgba(143,168,154,0.5), rgba(143,168,154,0.16) 55%, transparent 72%);
+  animation: card-wash 700ms var(--ease-out) forwards;
+  pointer-events: none;
+}
+@keyframes card-wash {
+  0%   { opacity: 0.9; transform: scale(0.3); }
+  100% { opacity: 0;   transform: scale(2.1); }
+}
+.pill:active { transform: scale(0.96); }
+.card-selected, .pill-selected { animation: card-settle 300ms var(--spring); }
+@keyframes card-settle {
+  0%   { transform: scale(0.98); }
+  60%  { transform: scale(1.006); }
+  100% { transform: scale(1); }
+}
+.tick-pop { animation: tick-pop 340ms var(--spring) both; }
+@keyframes tick-pop {
+  0%   { transform: scale(0); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ── CTA activation ──────────────────────────────────── */
+.btn-live { animation: cta-in 440ms var(--spring); }
+@keyframes cta-in {
+  0%   { opacity: 0.4; transform: translateY(10px) scale(0.98); }
+  100% { opacity: 1; transform: none; }
+}
+.btn-arrow { display: inline-block; transition: transform 200ms var(--ease-out); }
+.btn:not(:disabled):active .btn-arrow { transform: translateX(3px); }
+
+/* ── Progress bar — moving highlight pulls forward ───── */
+.progress-fill {
+  position: relative; overflow: hidden;
+  transition: width 640ms var(--ease-out);
+}
+.progress-fill::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent 20%, rgba(250,250,247,0.45) 50%, transparent 80%);
+  background-size: 200% 100%;
+  animation: prog-sheen 2.6s var(--ease-out) infinite;
+}
+@keyframes prog-sheen {
+  0%        { background-position: -110% 0; }
+  55%, 100% { background-position: 210% 0; }
+}
+
+/* ── Rolling digits (odometer) ───────────────────────── */
+.rn { display: inline-flex; line-height: 1; font-variant-numeric: tabular-nums; }
+.rn-digit { display: inline-block; height: 1em; overflow: hidden; }
+.rn-col { display: flex; flex-direction: column; transition: transform 540ms var(--ease-out); will-change: transform; }
+.rn-col > span { display: block; height: 1em; line-height: 1; }
+.rn-comma { display: inline-block; }
+
+/* ── Live estimate ticker ────────────────────────────── */
+.ticker {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 20;
+  background: var(--forest);
+  color: var(--paper);
+  display: flex; align-items: center; justify-content: space-between;
+  height: calc(50px + env(safe-area-inset-bottom, 0px));
+  padding: 0 18px env(safe-area-inset-bottom, 0px);
+  border-top: 1px solid rgba(247,243,237,0.14);
+}
+.ticker-enter { animation: ticker-up 460ms var(--ease-out); }
+@keyframes ticker-up { from { transform: translateY(102%); } }
+.ticker-left { display: inline-flex; align-items: center; gap: 8px; }
+.ticker-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--clay);
+  animation: dot-breathe 2.2s ease-in-out infinite;
+}
+@keyframes dot-breathe {
+  0%, 100% { opacity: 0.45; transform: scale(0.85); }
+  50%      { opacity: 1; transform: scale(1); }
+}
+.ticker-num { position: relative; display: inline-flex; align-items: baseline; gap: 5px; }
+.ticker-blur {
+  display: inline-flex; align-items: baseline; gap: 5px;
+  filter: blur(var(--tblur, 3px));
+  transition: filter 800ms var(--ease-out);
+}
+.ticker-sweep {
+  position: absolute; left: 0; right: 0; bottom: -7px; height: 2px;
+  background: var(--clay);
+  transform-origin: left;
+  animation: sweep 560ms var(--ease-out) forwards;
+}
+@keyframes sweep {
+  0%   { transform: scaleX(0); opacity: 1; }
+  70%  { transform: scaleX(1); opacity: 1; }
+  100% { transform: scaleX(1); opacity: 0; }
+}
+/* Room for the ticker under scrolling step content */
+.has-ticker .step-pad { padding-bottom: 100px !important; }
+
+/* ── Result screen ───────────────────────────────────── */
+.num-settle { animation: num-settle 1100ms var(--ease-out) both; animation-delay: var(--d, 0ms); }
+@keyframes num-settle {
+  0%   { opacity: 0; transform: scale(0.96) translateY(6px); }
+  100% { opacity: 1; transform: none; }
+}
+.ambient {
+  position: absolute; inset: -40%;
+  background: radial-gradient(circle at 30% 28%, rgba(212,149,107,0.11), transparent 55%);
+  animation: amb-drift 22s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+@keyframes amb-drift {
+  from { transform: translate3d(-6%, -4%, 0) scale(1); }
+  to   { transform: translate3d(8%, 10%, 0) scale(1.18); }
+}
+
+/* ── Value spring — number settles when a preset is tapped.
+   Two identical keyframes so the animation restarts without
+   remounting (which would kill the odometer roll). */
+.vs-a { animation: val-spring-a 460ms var(--spring); }
+.vs-b { animation: val-spring-b 460ms var(--spring); }
+@keyframes val-spring-a { 0% { transform: scale(0.93); } 55% { transform: scale(1.035); } 100% { transform: scale(1); } }
+@keyframes val-spring-b { 0% { transform: scale(0.93); } 55% { transform: scale(1.035); } 100% { transform: scale(1); } }
+
+/* Slider haptic-style tick — small pulse on the big value */
+.np-a { animation: num-pulse-a 300ms var(--spring); }
+.np-b { animation: num-pulse-b 300ms var(--spring); }
+@keyframes num-pulse-a { 0% { transform: scale(0.97); } 55% { transform: scale(1.015); } 100% { transform: scale(1); } }
+@keyframes num-pulse-b { 0% { transform: scale(0.97); } 55% { transform: scale(1.015); } 100% { transform: scale(1); } }
+
+/* ── Clock-decay bar (response-time cards) ───────────── */
+.decay-track {
+  flex: 1; height: 3px; border-radius: 999px;
+  background: var(--bone);
+  overflow: hidden;
+}
+.decay-fill {
+  height: 100%; border-radius: 999px;
+  background: var(--clay-deep);
+  transition: width 720ms var(--ease-out);
+}
+.decay-label {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.12em;
+  color: var(--clay-deep); white-space: nowrap;
+  transition: opacity 400ms var(--ease-out);
+}
+
+/* ── Result — breathing clay glow behind the number ──── */
+.num-glow {
+  position: absolute; inset: -34% -12%;
+  background: radial-gradient(ellipse at 32% 58%, rgba(212,149,107,0.30), transparent 68%);
+  filter: blur(16px);
+  animation: glow-breathe 4.2s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes glow-breathe {
+  0%, 100% { opacity: 0.45; transform: scale(0.96); }
+  50%      { opacity: 1;    transform: scale(1.06); }
+}
+
+/* ── Report reveal — pages rise as physical sheets ───── */
+.report-stack .report-page {
+  animation: sheet-in 760ms var(--spring-soft) both;
+}
+.report-stack .report-page:nth-child(1) { animation-delay: 90ms; }
+.report-stack .report-page:nth-child(2) { animation-delay: 260ms; }
+.report-stack .report-page:nth-child(3) { animation-delay: 430ms; }
+@keyframes sheet-in {
+  0%   { opacity: 0; transform: translateY(48px) rotate(0.7deg); box-shadow: 0 0 0 rgba(15,30,22,0); }
+  70%  { transform: translateY(-2px) rotate(-0.15deg); }
+  100% { opacity: 1; transform: none; box-shadow: 0 16px 36px rgba(15,30,22,0.10); }
+}
+@media print {
+  .report-stack .report-page { animation: none !important; box-shadow: none !important; }
+  .leak-field { display: none !important; }
+}
+
+/* ── Reduced motion — everything lands instantly ─────── */
+@media (prefers-reduced-motion: reduce) {
+  .rv, .mask-line > span, .num-settle, .tick-pop,
+  .pane-in-fwd, .pane-in-back, .pane-out-fwd, .pane-out-back,
+  .btn-live, .card-selected, .pill-selected, .ticker-enter {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .rn-col { transition: none !important; }
+  .ticker-blur { transition: none !important; }
+  .ticker-dot, .ambient { animation: none !important; }
+  .progress-fill { transition: none !important; }
+  .progress-fill::after, .num-glow,
+  .vs-a, .vs-b, .np-a, .np-b,
+  .card-selected::after,
+  .report-stack .report-page { animation: none !important; }
+  .decay-fill, .decay-label { transition: none !important; }
+  .leak-field { display: none !important; }
+}

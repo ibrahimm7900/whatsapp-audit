@@ -1,4 +1,10 @@
-// calc-result.jsx — Result screen, email gate modal, calculating, animated count-up
+// calc-result.jsx — Result screen (annual), email/WhatsApp gate modal, count-up,
+// report-markdown generator (for the WhatsApp PDF), searchable country picker,
+// and the "report on its way via WhatsApp" success screen.
+//
+// New design base (useCountUp / LossBar / ResultScreen / Breakdown / EmailGate shell)
+// with the live funnel re-injected: CountryCombobox + dial codes, generateReportMD,
+// ResultScreenAnnual (animated 12-month variant), and ReportSentScreen.
 
 const { useState: useStateR, useEffect: useEffectR, useRef: useRefR } = React;
 
@@ -9,8 +15,10 @@ function useCountUp(target, duration = 1400, start = 0) {
   const [val, setVal] = useStateR(start);
   useEffectR(() => {
     if (target == null) return;
+    if (window.IDS_reducedMotion && window.IDS_reducedMotion()) { setVal(target); return; }
     let raf, t0;
-    const ease = (t) => 1 - Math.pow(1 - t, 3);
+    // Non-linear pacing: fast start, agonizing slowdown on the last stretch
+    const ease = (t) => 1 - Math.pow(1 - t, 5);
     function tick(now) {
       if (!t0) t0 = now;
       const p = Math.min((now - t0) / duration, 1);
@@ -28,11 +36,10 @@ function useCountUp(target, duration = 1400, start = 0) {
 
 // ─────────────────────────────────────────────────────────────
 // Report Markdown generator
-// Mirrors the 3-page content of calc-report.jsx as plain text.
-// Called by submitLead in app.jsx before POSTing to Kapso.
+// Mirrors the 3-page report content as plain text. Called by submitLead
+// in app.jsx before POSTing to Kapso — this is what the PDF-builder renders.
 // ─────────────────────────────────────────────────────────────
 
-// Ported verbatim from calc-report.jsx getDiagnosis()
 function getDiagnosisParagraph(inputs, calc) {
   const fast = inputs.responseTime === 'under_1hr' || inputs.responseTime === '1_4hrs';
   const cov  = inputs.coverage;
@@ -49,7 +56,6 @@ function getDiagnosisParagraph(inputs, calc) {
   return `You reply quickly and you're always available. Your loss is lower than most — but at ${calc.lossRatePercent}% of enquiries still not converting, there is ${window.IDS_fmtAED(calc.monthlyLoss)} per month in leads that are not being captured, qualified, or followed up.`;
 }
 
-// Ported verbatim from calc-report.jsx getWhyThree()
 function getWhyThreeParagraph(inputs, calc, industryObj) {
   const enq = inputs.weeklyEnquiries >= 200 ? '200+' : inputs.weeklyEnquiries;
   return `You handle ${inputs.dealValue >= 50000 ? 'high-value' : 'time-sensitive'} ${industryObj.name.toLowerCase()} leads in a market where the first reply wins. With ${enq} enquiries per week and ${calc.responseTimeReadable}, your biggest gap is ${calc.coverageMultiplierPercent > 0 ? "coverage — leads going cold while you're offline" : 'speed — competitors replying first'}. These three workflows address that gap in order of ROI.`;
@@ -151,7 +157,8 @@ function LossBar({ lossPct }) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Result screen — forest background, full bleed
+// Result screen — big-number variant (kept for reference; app renders
+// ResultScreenAnnual at step 7)
 // ─────────────────────────────────────────────────────────────
 function ResultScreen({ inputs, calc, onUnlock, onBack, industryObj }) {
   const monthly = useCountUp(calc.monthlyLoss);
@@ -239,7 +246,7 @@ function Breakdown({ calc, inputs, industryObj }) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Email / WhatsApp gate modal
+// Searchable country-code picker (re-injected — the live one)
 // ─────────────────────────────────────────────────────────────
 // Gulf countries — pinned to the top of the picker (our core audience).
 const GCC_DIAL_CODES = [
@@ -530,6 +537,10 @@ function CountryCombobox({ value, onChange }) {
   );
 }
 
+// ─────────────────────────────────────────────────────────────
+// Email / WhatsApp gate modal (re-injected — the live one, with the
+// searchable country picker and WhatsApp-delivery framing)
+// ─────────────────────────────────────────────────────────────
 function EmailGate({ open, onClose, onSubmit }) {
   const [name, setName] = useStateR('');
   const [country, setCountry] = useStateR(GCC_DIAL_CODES[0]); // default UAE
@@ -614,41 +625,58 @@ function EmailGate({ open, onClose, onSubmit }) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Result screen — 12-month projection variant (chosen design)
+// Result screen — animated 12-month projection variant (step 7)
 // ─────────────────────────────────────────────────────────────
 function ResultScreenAnnual({ inputs, calc, industryObj, onUnlock, onBack }) {
-  const annual = calc.monthlyLoss * 12;
-  const monthly = useCountUp(calc.monthlyLoss);
+  const annual = useCountUp(calc.monthlyLoss * 12, 2600);
+  // Rows derive from the same animated value → live-counting flicker
+  const monthlyAnim = Math.round(annual / 12 / 100) * 100;
+  const weeklyAnim  = Math.round(annual / 12 / 4.3 / 100) * 100;
+  const dailyAnim   = Math.round(annual / 365 / 50) * 50;
   return (
-    <div style={{ background: 'var(--bg-inverse)', color: 'var(--paper)', minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '14px 22px 0', display: 'flex', justifyContent: 'space-between' }}>
+    <div style={{ background: 'var(--bg-inverse)', color: 'var(--paper)', minHeight: '100%', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
+      <div className="ambient"></div>
+      <LeakField mode="fall" dark lossRate={0.45} />
+      <div className="rv" style={{ padding: '14px 22px 0', display: 'flex', justifyContent: 'space-between', position: 'relative' }}>
         <Wordmark size={13} color="var(--paper)" />
         <span className="eyebrow" style={{ fontSize: 9, color: 'var(--paper-3)' }}>YOUR RESULT · 12 MONTH</span>
       </div>
-      <div style={{ padding: '36px 22px 22px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <p style={{ fontFamily: 'var(--font-display)', fontSize: 16, lineHeight: 1.35, color: 'var(--paper-2)', marginBottom: 26 }}>
+      <div style={{ padding: '32px 22px calc(22px + env(safe-area-inset-bottom, 0px))', flex: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}>
+        <p className="rv" style={{ '--d': '90ms', fontFamily: 'var(--font-display)', fontSize: 16, lineHeight: 1.35, color: 'var(--paper-2)', marginBottom: 26, textWrap: 'pretty' }}>
           {calc.diagnostic}
         </p>
-        <div className="eyebrow" style={{ fontSize: 9, color: 'var(--paper-3)', marginBottom: 6 }}>UNCHECKED, OVER 12 MONTHS</div>
-        <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 56, lineHeight: 1, letterSpacing: '-0.045em', color: 'var(--accent)', marginBottom: 22 }}>
-          {window.IDS_fmtAED(annual)}
+
+        {/* Annual stat — primary, counts up */}
+        <div className="rv" style={{ '--d': '200ms' }}>
+          <div className="eyebrow" style={{ fontSize: 9, color: 'var(--paper-3)', marginBottom: 8 }}>UNCHECKED, OVER 12 MONTHS</div>
         </div>
+        <div className="num-settle" style={{ '--d': '260ms', position: 'relative', marginBottom: 22 }}>
+          <span className="num-glow" aria-hidden="true"></span>
+          <div style={{ position: 'relative', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 54, lineHeight: 1, letterSpacing: '-0.045em', color: 'var(--accent)', display: 'flex', alignItems: 'baseline', gap: 10, fontVariantNumeric: 'tabular-nums' }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 16, letterSpacing: '0.08em' }}>AED</span>
+            <RollingNumber value={annual} />
+          </div>
+        </div>
+
+        {/* Time breakdown stack — staggers in after the count-up starts */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0, borderTop: '1px solid rgba(247,243,237,0.22)' }}>
-          <TimeRow label="PER MONTH" value={window.IDS_fmtAED(monthly)} />
-          <TimeRow label="PER WEEK" value={window.IDS_fmtAED(calc.weeklyLoss)} />
-          <TimeRow label="PER DAY" value={window.IDS_fmtAED(Math.round(calc.weeklyLoss / 7 / 100) * 100)} last />
+          <div className="rv" style={{ '--d': '700ms' }}><TimeRow label="PER MONTH" value={monthlyAnim} /></div>
+          <div className="rv" style={{ '--d': '850ms' }}><TimeRow label="PER WEEK" value={weeklyAnim} /></div>
+          <div className="rv" style={{ '--d': '1000ms' }}><TimeRow label="PER DAY" value={dailyAnim} last /></div>
         </div>
-        <div style={{ marginTop: 'auto', paddingTop: 22 }}>
-          <p style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 17, lineHeight: 1.4, color: 'var(--paper)' }}>
-            The fix costs AED 60,000/year. You're losing {window.IDS_fmtAED(annual)}.
+
+        <div className="rv" style={{ '--d': '1250ms', marginTop: 'auto', paddingTop: 22 }}>
+          <p style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 17, lineHeight: 1.4, color: 'var(--paper)', textWrap: 'pretty' }}>
+            The fix costs AED 60,000/year. You're losing {window.IDS_fmtAED(calc.monthlyLoss * 12)}.
           </p>
           <button type="button" onClick={onUnlock} className="btn btn-paper" style={{ marginTop: 18 }}>
-            Get my free report <span style={{ marginLeft: 4 }}>→</span>
+            Get my free report <span className="btn-arrow" style={{ marginLeft: 4 }}>→</span>
           </button>
+          <p style={{ marginTop: 12, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.20em', textTransform: 'uppercase', color: 'rgba(247,243,237,0.45)' }}>
+            Personalised to your business · Free · AED 0
+          </p>
           {onBack && (
-            <button type="button" onClick={onBack} style={{ marginTop: 10, color: 'rgba(247,243,237,0.45)', fontSize: 11, fontFamily: 'var(--font-display)', display: 'block', width: '100%', textAlign: 'center' }}>
-              ← Edit my answers
-            </button>
+            <button type="button" onClick={onBack} style={{ margin: '10px auto 0', display: 'block', color: 'rgba(247,243,237,0.45)', fontSize: 11, fontFamily: 'var(--font-display)' }}>← Edit my answers</button>
           )}
         </div>
       </div>
@@ -660,7 +688,10 @@ function TimeRow({ label, value, last }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: last ? 'none' : '1px solid rgba(247,243,237,0.14)' }}>
       <span className="eyebrow" style={{ fontSize: 9, color: 'var(--paper-3)' }}>{label}</span>
-      <span style={{ fontFamily: 'var(--font-display)', fontWeight: 500, fontSize: 17, color: 'var(--paper)' }}>{value}</span>
+      <span style={{ fontFamily: 'var(--font-display)', fontWeight: 500, fontSize: 17, color: 'var(--paper)', display: 'inline-flex', alignItems: 'baseline', gap: 6 }}>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.14em', color: 'var(--paper-3)' }}>AED</span>
+        <RollingNumber value={value} />
+      </span>
     </div>
   );
 }
@@ -668,7 +699,7 @@ function TimeRow({ label, value, last }) {
 // ─────────────────────────────────────────────────────────────
 // Success screen — shown after the gate is submitted.
 // The report itself is sent via WhatsApp (delivered out-of-band,
-// not rendered in the app).
+// not rendered in the app — the number is the lead-capture leverage).
 // ─────────────────────────────────────────────────────────────
 function ReportSentScreen({ calc, lead, onRestart }) {
   const phone = lead?.whatsapp || 'your WhatsApp';
@@ -723,4 +754,7 @@ function ReportSentScreen({ calc, lead, onRestart }) {
   );
 }
 
-Object.assign(window, { ResultScreen, ResultScreenAnnual, ReportSentScreen, EmailGate, useCountUp, LossBar, generateReportMD });
+Object.assign(window, {
+  ResultScreen, ResultScreenAnnual, ReportSentScreen, EmailGate, CountryCombobox,
+  useCountUp, LossBar, generateReportMD,
+});

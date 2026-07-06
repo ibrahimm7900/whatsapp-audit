@@ -24,6 +24,7 @@
   <!-- End Meta Pixel -->
 
   <link rel="stylesheet" href="signal.css" />
+  <link rel="stylesheet" href="motion.css" />
   <link rel="stylesheet" href="print-a4.css" />
   <style>
     /* Mobile-first full-bleed shell */
@@ -73,7 +74,11 @@
 <!-- Plain JS — runs before babel transforms -->
 <script src="data.js"></script>
 
-<!-- JSX modules — transformed by Babel-standalone in the browser -->
+<!-- JSX modules — transformed by Babel-standalone in the browser.
+     Load order matters: helpers (ticker/leak-field) before the shell/result
+     that reference them; app.jsx last (it mounts everything). -->
+<script type="text/babel" data-presets="react" src="live-ticker.jsx"></script>
+<script type="text/babel" data-presets="react" src="leak-field.jsx"></script>
 <script type="text/babel" data-presets="react" src="calc-shell.jsx"></script>
 <script type="text/babel" data-presets="react" src="calc-result.jsx"></script>
 <script type="text/babel" data-presets="react" src="app.jsx"></script>
