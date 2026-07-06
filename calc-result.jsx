@@ -131,7 +131,7 @@ function generateReportMD(inputs, calc, industryObj, name) {
     "### Your Next Step — Try it free. See it work. Then decide.",
     '**AED 0** to start · **24 hrs** to live · **No contract**',
     '',
-    '**WhatsApp:** +44 7842 552606',
+    '**WhatsApp:** +44 7353 750250',
     '**Instagram:** @ibrahim.prompted',
   ].join('\n');
 }
@@ -705,7 +705,7 @@ function ReportSentScreen({ calc, lead, onRestart }) {
   const phone = lead?.whatsapp || 'your WhatsApp';
   const lossLabel = window.IDS_fmtAED(calc.monthlyLoss);
   const waText = encodeURIComponent(`Hi, I just did the WhatsApp revenue audit — looks like I'm losing ${lossLabel} a month. Can you tell me more about the pilot?`);
-  const waLink = `https://wa.me/447842552606?text=${waText}`;
+  const waLink = `https://wa.me/447353750250?text=${waText}`;
   const igLink = 'https://www.instagram.com/ibrahim.prompted/';
 
   return (
