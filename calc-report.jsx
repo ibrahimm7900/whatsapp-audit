@@ -166,7 +166,7 @@ function WorkflowCard({ w, index, isStartHere }) {
       <div className="workflow-meta">
         <span>{w.complexity?.toUpperCase()} COMPLEXITY</span>
         <span style={{ width: 3, height: 3, background: 'var(--fg-4)', borderRadius: '50%' }} />
-        <span>LIVE IN 48 HOURS</span>
+        <span>LIVE IN 24 HOURS</span>
       </div>
     </div>
   );
@@ -223,7 +223,7 @@ function ReportPage3({ inputs, calc, name }) {
           </h3>
           <div className="offer-cols">
             <div><div className="offer-num">AED 0</div><div className="offer-cap">to start</div></div>
-            <div><div className="offer-num">48 hrs</div><div className="offer-cap">to live</div></div>
+            <div><div className="offer-num">24 hrs</div><div className="offer-cap">to live</div></div>
             <div><div className="offer-num">No</div><div className="offer-cap">contract</div></div>
           </div>
 

@@ -72,7 +72,7 @@ function generateReportMD(inputs, calc, industryObj, name) {
     w.does,
     '',
     `**Recovers:** ${w.recovers}`,
-    `**Complexity:** ${w.complexity} · Live in 48 hours`,
+    `**Complexity:** ${w.complexity} · Live in 24 hours`,
     '',
   ].join('\n')).join('\n');
 
@@ -123,7 +123,7 @@ function generateReportMD(inputs, calc, industryObj, name) {
     `The difference is ${fmt(netWithPilot)} — in your pocket, not your competitors'.`,
     '',
     "### Your Next Step — Try it free. See it work. Then decide.",
-    '**AED 0** to start · **48 hrs** to live · **No contract**',
+    '**AED 0** to start · **24 hrs** to live · **No contract**',
     '',
     '**WhatsApp:** +44 7842 552606',
     '**Instagram:** @ibrahim.prompted',
@@ -241,13 +241,183 @@ function Breakdown({ calc, inputs, industryObj }) {
 // ─────────────────────────────────────────────────────────────
 // Email / WhatsApp gate modal
 // ─────────────────────────────────────────────────────────────
+// Gulf countries — pinned to the top of the picker (our core audience).
 const GCC_DIAL_CODES = [
-  { code: '+971', country: 'UAE' },
-  { code: '+966', country: 'Saudi' },
-  { code: '+974', country: 'Qatar' },
-  { code: '+965', country: 'Kuwait' },
-  { code: '+968', country: 'Oman' },
-  { code: '+973', country: 'Bahrain' },
+  { iso: 'AE', code: '+971', country: 'United Arab Emirates' },
+  { iso: 'SA', code: '+966', country: 'Saudi Arabia' },
+  { iso: 'QA', code: '+974', country: 'Qatar' },
+  { iso: 'KW', code: '+965', country: 'Kuwait' },
+  { iso: 'OM', code: '+968', country: 'Oman' },
+  { iso: 'BH', code: '+973', country: 'Bahrain' },
+];
+
+// Everyone else, alphabetical. Value is the dial code (all we need for E.164);
+// where a code is shared (+1, +7), the first entry represents it in the closed select.
+const WORLD_DIAL_CODES = [
+  { iso: 'AF', code: '+93',  country: 'Afghanistan' },
+  { iso: 'AL', code: '+355', country: 'Albania' },
+  { iso: 'DZ', code: '+213', country: 'Algeria' },
+  { iso: 'AD', code: '+376', country: 'Andorra' },
+  { iso: 'AO', code: '+244', country: 'Angola' },
+  { iso: 'AR', code: '+54',  country: 'Argentina' },
+  { iso: 'AM', code: '+374', country: 'Armenia' },
+  { iso: 'AU', code: '+61',  country: 'Australia' },
+  { iso: 'AT', code: '+43',  country: 'Austria' },
+  { iso: 'AZ', code: '+994', country: 'Azerbaijan' },
+  { iso: 'BD', code: '+880', country: 'Bangladesh' },
+  { iso: 'BB', code: '+1',   country: 'Barbados' },
+  { iso: 'BY', code: '+375', country: 'Belarus' },
+  { iso: 'BE', code: '+32',  country: 'Belgium' },
+  { iso: 'BZ', code: '+501', country: 'Belize' },
+  { iso: 'BJ', code: '+229', country: 'Benin' },
+  { iso: 'BT', code: '+975', country: 'Bhutan' },
+  { iso: 'BO', code: '+591', country: 'Bolivia' },
+  { iso: 'BA', code: '+387', country: 'Bosnia and Herzegovina' },
+  { iso: 'BW', code: '+267', country: 'Botswana' },
+  { iso: 'BR', code: '+55',  country: 'Brazil' },
+  { iso: 'BN', code: '+673', country: 'Brunei' },
+  { iso: 'BG', code: '+359', country: 'Bulgaria' },
+  { iso: 'BF', code: '+226', country: 'Burkina Faso' },
+  { iso: 'BI', code: '+257', country: 'Burundi' },
+  { iso: 'KH', code: '+855', country: 'Cambodia' },
+  { iso: 'CM', code: '+237', country: 'Cameroon' },
+  { iso: 'CA', code: '+1',   country: 'Canada' },
+  { iso: 'TD', code: '+235', country: 'Chad' },
+  { iso: 'CL', code: '+56',  country: 'Chile' },
+  { iso: 'CN', code: '+86',  country: 'China' },
+  { iso: 'CO', code: '+57',  country: 'Colombia' },
+  { iso: 'CD', code: '+243', country: 'Congo (DRC)' },
+  { iso: 'CG', code: '+242', country: 'Congo (Republic)' },
+  { iso: 'CR', code: '+506', country: 'Costa Rica' },
+  { iso: 'HR', code: '+385', country: 'Croatia' },
+  { iso: 'CU', code: '+53',  country: 'Cuba' },
+  { iso: 'CY', code: '+357', country: 'Cyprus' },
+  { iso: 'CZ', code: '+420', country: 'Czechia' },
+  { iso: 'DK', code: '+45',  country: 'Denmark' },
+  { iso: 'DJ', code: '+253', country: 'Djibouti' },
+  { iso: 'DO', code: '+1',   country: 'Dominican Republic' },
+  { iso: 'EC', code: '+593', country: 'Ecuador' },
+  { iso: 'EG', code: '+20',  country: 'Egypt' },
+  { iso: 'SV', code: '+503', country: 'El Salvador' },
+  { iso: 'EE', code: '+372', country: 'Estonia' },
+  { iso: 'ET', code: '+251', country: 'Ethiopia' },
+  { iso: 'FJ', code: '+679', country: 'Fiji' },
+  { iso: 'FI', code: '+358', country: 'Finland' },
+  { iso: 'FR', code: '+33',  country: 'France' },
+  { iso: 'GA', code: '+241', country: 'Gabon' },
+  { iso: 'GM', code: '+220', country: 'Gambia' },
+  { iso: 'GE', code: '+995', country: 'Georgia' },
+  { iso: 'DE', code: '+49',  country: 'Germany' },
+  { iso: 'GH', code: '+233', country: 'Ghana' },
+  { iso: 'GR', code: '+30',  country: 'Greece' },
+  { iso: 'GT', code: '+502', country: 'Guatemala' },
+  { iso: 'GN', code: '+224', country: 'Guinea' },
+  { iso: 'GY', code: '+592', country: 'Guyana' },
+  { iso: 'HT', code: '+509', country: 'Haiti' },
+  { iso: 'HN', code: '+504', country: 'Honduras' },
+  { iso: 'HK', code: '+852', country: 'Hong Kong' },
+  { iso: 'HU', code: '+36',  country: 'Hungary' },
+  { iso: 'IS', code: '+354', country: 'Iceland' },
+  { iso: 'IN', code: '+91',  country: 'India' },
+  { iso: 'ID', code: '+62',  country: 'Indonesia' },
+  { iso: 'IR', code: '+98',  country: 'Iran' },
+  { iso: 'IQ', code: '+964', country: 'Iraq' },
+  { iso: 'IE', code: '+353', country: 'Ireland' },
+  { iso: 'IL', code: '+972', country: 'Israel' },
+  { iso: 'IT', code: '+39',  country: 'Italy' },
+  { iso: 'CI', code: '+225', country: "Côte d'Ivoire" },
+  { iso: 'JM', code: '+1',   country: 'Jamaica' },
+  { iso: 'JP', code: '+81',  country: 'Japan' },
+  { iso: 'JO', code: '+962', country: 'Jordan' },
+  { iso: 'KZ', code: '+7',   country: 'Kazakhstan' },
+  { iso: 'KE', code: '+254', country: 'Kenya' },
+  { iso: 'XK', code: '+383', country: 'Kosovo' },
+  { iso: 'KG', code: '+996', country: 'Kyrgyzstan' },
+  { iso: 'LA', code: '+856', country: 'Laos' },
+  { iso: 'LV', code: '+371', country: 'Latvia' },
+  { iso: 'LB', code: '+961', country: 'Lebanon' },
+  { iso: 'LS', code: '+266', country: 'Lesotho' },
+  { iso: 'LR', code: '+231', country: 'Liberia' },
+  { iso: 'LY', code: '+218', country: 'Libya' },
+  { iso: 'LI', code: '+423', country: 'Liechtenstein' },
+  { iso: 'LT', code: '+370', country: 'Lithuania' },
+  { iso: 'LU', code: '+352', country: 'Luxembourg' },
+  { iso: 'MO', code: '+853', country: 'Macau' },
+  { iso: 'MG', code: '+261', country: 'Madagascar' },
+  { iso: 'MW', code: '+265', country: 'Malawi' },
+  { iso: 'MY', code: '+60',  country: 'Malaysia' },
+  { iso: 'MV', code: '+960', country: 'Maldives' },
+  { iso: 'ML', code: '+223', country: 'Mali' },
+  { iso: 'MT', code: '+356', country: 'Malta' },
+  { iso: 'MR', code: '+222', country: 'Mauritania' },
+  { iso: 'MU', code: '+230', country: 'Mauritius' },
+  { iso: 'MX', code: '+52',  country: 'Mexico' },
+  { iso: 'MD', code: '+373', country: 'Moldova' },
+  { iso: 'MC', code: '+377', country: 'Monaco' },
+  { iso: 'MN', code: '+976', country: 'Mongolia' },
+  { iso: 'ME', code: '+382', country: 'Montenegro' },
+  { iso: 'MA', code: '+212', country: 'Morocco' },
+  { iso: 'MZ', code: '+258', country: 'Mozambique' },
+  { iso: 'MM', code: '+95',  country: 'Myanmar' },
+  { iso: 'NA', code: '+264', country: 'Namibia' },
+  { iso: 'NP', code: '+977', country: 'Nepal' },
+  { iso: 'NL', code: '+31',  country: 'Netherlands' },
+  { iso: 'NZ', code: '+64',  country: 'New Zealand' },
+  { iso: 'NI', code: '+505', country: 'Nicaragua' },
+  { iso: 'NE', code: '+227', country: 'Niger' },
+  { iso: 'NG', code: '+234', country: 'Nigeria' },
+  { iso: 'MK', code: '+389', country: 'North Macedonia' },
+  { iso: 'NO', code: '+47',  country: 'Norway' },
+  { iso: 'PK', code: '+92',  country: 'Pakistan' },
+  { iso: 'PS', code: '+970', country: 'Palestine' },
+  { iso: 'PA', code: '+507', country: 'Panama' },
+  { iso: 'PG', code: '+675', country: 'Papua New Guinea' },
+  { iso: 'PY', code: '+595', country: 'Paraguay' },
+  { iso: 'PE', code: '+51',  country: 'Peru' },
+  { iso: 'PH', code: '+63',  country: 'Philippines' },
+  { iso: 'PL', code: '+48',  country: 'Poland' },
+  { iso: 'PT', code: '+351', country: 'Portugal' },
+  { iso: 'PR', code: '+1',   country: 'Puerto Rico' },
+  { iso: 'RO', code: '+40',  country: 'Romania' },
+  { iso: 'RU', code: '+7',   country: 'Russia' },
+  { iso: 'RW', code: '+250', country: 'Rwanda' },
+  { iso: 'SN', code: '+221', country: 'Senegal' },
+  { iso: 'RS', code: '+381', country: 'Serbia' },
+  { iso: 'SL', code: '+232', country: 'Sierra Leone' },
+  { iso: 'SG', code: '+65',  country: 'Singapore' },
+  { iso: 'SK', code: '+421', country: 'Slovakia' },
+  { iso: 'SI', code: '+386', country: 'Slovenia' },
+  { iso: 'SO', code: '+252', country: 'Somalia' },
+  { iso: 'ZA', code: '+27',  country: 'South Africa' },
+  { iso: 'KR', code: '+82',  country: 'South Korea' },
+  { iso: 'SS', code: '+211', country: 'South Sudan' },
+  { iso: 'ES', code: '+34',  country: 'Spain' },
+  { iso: 'LK', code: '+94',  country: 'Sri Lanka' },
+  { iso: 'SD', code: '+249', country: 'Sudan' },
+  { iso: 'SR', code: '+597', country: 'Suriname' },
+  { iso: 'SE', code: '+46',  country: 'Sweden' },
+  { iso: 'CH', code: '+41',  country: 'Switzerland' },
+  { iso: 'SY', code: '+963', country: 'Syria' },
+  { iso: 'TW', code: '+886', country: 'Taiwan' },
+  { iso: 'TJ', code: '+992', country: 'Tajikistan' },
+  { iso: 'TZ', code: '+255', country: 'Tanzania' },
+  { iso: 'TH', code: '+66',  country: 'Thailand' },
+  { iso: 'TG', code: '+228', country: 'Togo' },
+  { iso: 'TT', code: '+1',   country: 'Trinidad and Tobago' },
+  { iso: 'TN', code: '+216', country: 'Tunisia' },
+  { iso: 'TR', code: '+90',  country: 'Turkey' },
+  { iso: 'TM', code: '+993', country: 'Turkmenistan' },
+  { iso: 'UG', code: '+256', country: 'Uganda' },
+  { iso: 'UA', code: '+380', country: 'Ukraine' },
+  { iso: 'GB', code: '+44',  country: 'United Kingdom' },
+  { iso: 'US', code: '+1',   country: 'United States' },
+  { iso: 'UY', code: '+598', country: 'Uruguay' },
+  { iso: 'UZ', code: '+998', country: 'Uzbekistan' },
+  { iso: 'VE', code: '+58',  country: 'Venezuela' },
+  { iso: 'VN', code: '+84',  country: 'Vietnam' },
+  { iso: 'YE', code: '+967', country: 'Yemen' },
+  { iso: 'ZM', code: '+260', country: 'Zambia' },
+  { iso: 'ZW', code: '+263', country: 'Zimbabwe' },
 ];
 
 // Normalise typed digits into a local mobile number.
@@ -259,11 +429,113 @@ function cleanLocalNumber(raw, dialCode) {
   return digits.replace(/^0+/, '');
 }
 
+// Full list: Gulf pinned first, then the rest alphabetically.
+const ALL_DIAL_CODES = [...GCC_DIAL_CODES, ...WORLD_DIAL_CODES];
+
+// Crisp flag SVG (renders on every OS incl. Windows, unlike emoji flags).
+function flagUrl(iso) { return 'https://flagcdn.com/' + (iso || '').toLowerCase() + '.svg'; }
+
+// Searchable country-code picker — type a country name or dial code to filter.
+function CountryCombobox({ value, onChange }) {
+  const [open, setOpen] = useStateR(false);
+  const [query, setQuery] = useStateR('');
+  const rootRef = useRefR(null);
+  const inputRef = useRefR(null);
+
+  useEffectR(() => {
+    if (!open) return;
+    function onDoc(e) { if (rootRef.current && !rootRef.current.contains(e.target)) setOpen(false); }
+    function onKey(e) { if (e.key === 'Escape') setOpen(false); }
+    document.addEventListener('mousedown', onDoc);
+    document.addEventListener('keydown', onKey);
+    const t = setTimeout(() => { if (inputRef.current) inputRef.current.focus(); }, 0);
+    return () => { document.removeEventListener('mousedown', onDoc); document.removeEventListener('keydown', onKey); clearTimeout(t); };
+  }, [open]);
+
+  const q = query.trim().toLowerCase();
+  const nq = q.replace('+', '');
+  const filtered = q
+    ? ALL_DIAL_CODES.filter(c =>
+        c.country.toLowerCase().includes(q) ||
+        (nq && c.code.replace('+', '').startsWith(nq)) ||
+        c.iso.toLowerCase() === q)
+    : ALL_DIAL_CODES;
+
+  function pick(c) { onChange(c); setOpen(false); setQuery(''); }
+
+  const flagImg = (iso, w) => (
+    <img src={flagUrl(iso)} alt="" width={w} height={Math.round(w * 0.72)}
+      loading="lazy" style={{ borderRadius: 2, objectFit: 'cover', flexShrink: 0, boxShadow: '0 0 0 1px rgba(15,30,22,0.08)' }} />
+  );
+
+  return (
+    <div ref={rootRef} style={{ position: 'relative', width: 132 }}>
+      <button
+        type="button" onClick={() => setOpen(o => !o)}
+        aria-haspopup="listbox" aria-expanded={open} aria-label="Country code"
+        style={{
+          width: '100%', height: 48, padding: '0 10px', display: 'flex', alignItems: 'center', gap: 8,
+          border: '1px solid var(--border)', borderRadius: 'var(--r-md)', background: 'var(--paper)',
+          fontFamily: 'var(--font-display)', fontWeight: 500, fontSize: 13, color: 'var(--fg)', cursor: 'pointer',
+        }}
+      >
+        {flagImg(value.iso, 22)}
+        <span>{value.code}</span>
+        <span style={{ marginLeft: 'auto', color: 'var(--fg-4)', fontSize: 10 }}>▾</span>
+      </button>
+
+      {open && (
+        <div
+          role="listbox"
+          style={{
+            position: 'absolute', zIndex: 30, top: 52, left: 0, width: 280, maxWidth: '78vw',
+            background: 'var(--paper)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)',
+            boxShadow: '0 12px 32px rgba(15,30,22,0.18)', overflow: 'hidden',
+          }}
+        >
+          <div style={{ padding: 8, borderBottom: '1px solid var(--hairline)' }}>
+            <input
+              ref={inputRef} value={query} onChange={e => setQuery(e.target.value)}
+              placeholder="Search country or code"
+              style={{
+                width: '100%', height: 38, padding: '0 10px', boxSizing: 'border-box',
+                border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg)',
+                fontFamily: 'var(--font-display)', fontSize: 13, color: 'var(--fg)',
+              }}
+            />
+          </div>
+          <div style={{ maxHeight: 240, overflowY: 'auto' }}>
+            {filtered.length === 0 && (
+              <div style={{ padding: '14px 12px', fontSize: 12, color: 'var(--fg-4)' }}>No match</div>
+            )}
+            {filtered.map(c => (
+              <button
+                key={c.iso} type="button" role="option" aria-selected={c.iso === value.iso}
+                onClick={() => pick(c)}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px',
+                  background: c.iso === value.iso ? 'var(--bg)' : 'transparent', border: 'none',
+                  cursor: 'pointer', textAlign: 'left', fontFamily: 'var(--font-display)', fontSize: 13, color: 'var(--fg)',
+                }}
+              >
+                {flagImg(c.iso, 22)}
+                <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.country}</span>
+                <span style={{ color: 'var(--fg-3)' }}>{c.code}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function EmailGate({ open, onClose, onSubmit }) {
   const [name, setName] = useStateR('');
-  const [dialCode, setDialCode] = useStateR('+971');
+  const [country, setCountry] = useStateR(GCC_DIAL_CODES[0]); // default UAE
   const [phone, setPhone] = useStateR('');
   const [submitting, setSubmitting] = useStateR(false);
+  const dialCode = country.code;
 
   if (!open) return null;
   const localDigits = cleanLocalNumber(phone, dialCode);
@@ -301,22 +573,7 @@ function EmailGate({ open, onClose, onSubmit }) {
 
             <label className="form-label">YOUR WHATSAPP NUMBER</label>
             <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
-              <select
-                value={dialCode}
-                onChange={(e) => setDialCode(e.target.value)}
-                aria-label="Country code"
-                style={{
-                  width: 118, height: 48, padding: '0 10px',
-                  border: '1px solid var(--border)', borderRadius: 'var(--r-md)',
-                  background: 'var(--paper)',
-                  fontFamily: 'var(--font-display)', fontWeight: 500, fontSize: 13,
-                  color: 'var(--fg)', cursor: 'pointer',
-                }}
-              >
-                {GCC_DIAL_CODES.map(c => (
-                  <option key={c.code} value={c.code}>{c.code} {c.country}</option>
-                ))}
-              </select>
+              <CountryCombobox value={country} onChange={setCountry} />
               <input
                 type="tel" inputMode="numeric"
                 value={phone} onChange={(e) => setPhone(e.target.value)}
@@ -445,7 +702,7 @@ function ReportSentScreen({ calc, lead, onRestart }) {
 
         <div className="eyebrow" style={{ fontSize: 9, color: 'var(--paper-3)', marginBottom: 8 }}>WHILE YOU WAIT</div>
         <p style={{ fontFamily: 'var(--font-display)', fontWeight: 500, fontSize: 16, lineHeight: 1.4, color: 'var(--paper)', marginBottom: 18, textWrap: 'pretty' }}>
-          Want to start the pilot today? Message us — we'll have you live in 48 hours.
+          Want to start the pilot today? Message us — we'll have you live in 24 hours.
         </p>
 
         <div style={{ marginTop: 'auto', paddingTop: 18 }}>
