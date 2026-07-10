@@ -10,6 +10,23 @@ const KAPSO_API_BASE    = 'https://api.kapso.ai/platform/v1';
 const KAPSO_WORKFLOW_ID = '59e4a70f-cf3b-4b3a-9ee3-31fbf319d803';
 const KAPSO_PUBLIC_KEY  = '58f988d84e4310ceb5eb3202457289824e662cc40a03f37d0a913de290982c5b';
 
+// ── Funnel instrumentation (Meta Pixel custom events) ─────────
+// We were optimising blind: the pixel only fired PageView + Lead, so the whole
+// multi-step flow was a black box. These custom events expose the exact drop-step.
+// Guarded so they no-op if the pixel isn't loaded (dev / blocked / SSR).
+// STEP_NAMES maps a question step index → a stable name; keep it in sync with
+// renderStep so the funnel read survives step-count changes.
+const STEP_NAMES = { 1: 'industry', 2: 'response', 3: 'coverage' };
+const LAST_QUESTION_STEP = 3;
+
+function idsTrack(event, params) {
+  try {
+    if (typeof window !== 'undefined' && window.fbq) {
+      window.fbq('trackCustom', event, params || {});
+    }
+  } catch (e) {}
+}
+
 // ── UTM attribution ───────────────────────────────────────────
 // Captured once at page load — this is a single-page app, so the landing
 // URL's query string is the ad/creative that drove the visit.
@@ -34,10 +51,11 @@ function loadSavedState() {
     if (!raw) return {};
     const s = JSON.parse(raw) || {};
     let step = typeof s.step === 'number' ? s.step : 0;
-    if (step === 6) step = 5;          // never restore mid-calculation
-    if (step >= 8) step = 7;           // report needs a lead — land on result
+    // Question steps are now 1–3 (was 1–5). Clamp any legacy mid-flow step into range.
+    if (step >= 4 && step <= 6) step = 3; // legacy deal/enquiries/calculating → last question
+    if (step >= 8) step = 7;              // report needs a lead — land on result
     const complete = s.industry && s.dealValue && s.responseTime && s.coverage;
-    if (step >= 6 && !complete) step = Math.min(step, 5);
+    if (step >= 6 && !complete) step = Math.min(step, 3);
     if (step === 7 && !complete) step = 0;
     return { ...s, step };
   } catch (e) { return {}; }
@@ -84,10 +102,23 @@ function useCalculator(initial = {}) {
 
   function calculate() {
     setStep(6);
-    setTimeout(() => setStep(7), 2400);
+    // 600ms: one tension beat for the forest "computing" animation. Was 2400ms —
+    // 2.4s of dead air was pure drop-off risk for cold traffic (number's already in memory).
+    setTimeout(() => setStep(7), 600);
   }
 
-  function unlock() { setGateOpen(true); }
+  // Pick an industry AND auto-populate dealValue from its per-industry default, so the
+  // deal-value question can be skipped while calc() (which requires dealValue) still works
+  // and the report's workflow ranking still has a value to score against.
+  function pickIndustry(id) {
+    setIndustry(id);
+    const ind = window.IDS_INDUSTRIES.find(i => i.id === id);
+    const dv = ind && ind.defaultDeal ? ind.defaultDeal : 5000;
+    setDealValue(dv);
+    setDealPresetId(null);
+  }
+
+  function unlock() { idsTrack('AuditGateOpened'); setGateOpen(true); }
   async function submitLead(data) {
     const { name, whatsapp } = data;
 
@@ -163,7 +194,7 @@ function useCalculator(initial = {}) {
 
   return {
     step, gotoStep, next, back, calculate, unlock, submitLead, reset,
-    industry, setIndustry,
+    industry, setIndustry, pickIndustry,
     dealValue, dealPresetId, setDealMeta: ({ value, presetId }) => { setDealValue(value); setDealPresetId(presetId); },
     weeklyEnquiries, setWeeklyEnquiries,
     responseTime, setResponseTime,
@@ -184,28 +215,39 @@ function CalculatorApp({ presetState }) {
   const prevRef = useRefA(c.step);
   useEffectA(() => {
     if (prevRef.current === c.step) return;
-    const dir = c.step > prevRef.current ? 1 : -1;
-    setTrans({ prev: prevRef.current, dir });
+    const prevStep = prevRef.current;
+    const dir = c.step > prevStep ? 1 : -1;
+
+    // ── Funnel events (fire on forward progress only, so Back/edit doesn't inflate) ──
+    if (dir > 0) {
+      if (c.step === 1 && prevStep === 0) idsTrack('AuditStarted');
+      if (STEP_NAMES[c.step]) idsTrack('AuditStep', { step_number: c.step, step_name: STEP_NAMES[c.step] });
+      if (c.step === 7) idsTrack('AuditResultViewed');
+    }
+
+    setTrans({ prev: prevStep, dir });
     prevRef.current = c.step;
     const t = setTimeout(() => setTrans(tr => ({ ...tr, prev: null })), 360);
     return () => clearTimeout(t);
   }, [c.step]);
 
+  // Streamlined tap-only flow: 3 question steps (industry → response → coverage),
+  // then calculating (6) → result (7) → report (8). Deal value is auto-set from the
+  // chosen industry (pickIndustry) and weekly enquiries keeps its default of 20, so
+  // the calc + report ranking stay fully populated without extra taps or a keyboard.
   function renderStep(s) {
     if (s === 0) return <WelcomeScreen onStart={() => c.gotoStep(1)} />;
-    if (s === 1) return <Step1Industry value={c.industry} onChange={c.setIndustry} onNext={c.next} onBack={() => c.gotoStep(0)} />;
-    if (s === 2) return <Step2DealValue value={c.dealValue} presetId={c.dealPresetId} onChange={c.setDealMeta} onNext={c.next} onBack={c.back} />;
-    if (s === 3) return <Step3Enquiries value={c.weeklyEnquiries} onChange={c.setWeeklyEnquiries} onNext={c.next} onBack={c.back} />;
-    if (s === 4) return <Step4Response value={c.responseTime} onChange={c.setResponseTime} onNext={c.next} onBack={c.back} />;
-    if (s === 5) return <Step5Coverage value={c.coverage} onChange={c.setCoverage} onCalculate={c.calculate} onBack={c.back} />;
+    if (s === 1) return <Step1Industry value={c.industry} onChange={c.pickIndustry} onNext={c.next} onBack={() => c.gotoStep(0)} />;
+    if (s === 2) return <Step4Response value={c.responseTime} onChange={c.setResponseTime} onNext={c.next} onBack={c.back} />;
+    if (s === 3) return <Step5Coverage value={c.coverage} onChange={c.setCoverage} onCalculate={c.calculate} onBack={c.back} />;
     if (s === 6) return <CalculatingState inputs={c.inputs} industryObj={c.industryObj} />;
-    if (s === 7) return <ResultScreenAnnual inputs={c.inputs} calc={c.calc} industryObj={c.industryObj} onUnlock={c.unlock} onBack={() => c.gotoStep(5)} />;
+    if (s === 7) return <ResultScreenAnnual inputs={c.inputs} calc={c.calc} industryObj={c.industryObj} onUnlock={c.unlock} onBack={() => c.gotoStep(3)} />;
     if (s === 8) return <ReportSentScreen calc={c.calc} lead={c.lead} onRestart={c.reset} />;
     return null;
   }
 
-  const showChrome = c.step >= 1 && c.step <= 5;
-  const showTicker = c.step >= 1 && c.step <= 5;
+  const showChrome = c.step >= 1 && c.step <= LAST_QUESTION_STEP;
+  const showTicker = c.step >= 1 && c.step <= LAST_QUESTION_STEP;
 
   // Leak-field loss rate reacts to the answers so far
   const respObj = window.IDS_RESPONSE.find(r => r.id === c.responseTime);
@@ -216,7 +258,7 @@ function CalculatorApp({ presetState }) {
   return (
     <div className={showTicker ? 'has-ticker' : ''} style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', background: 'var(--bg)' }}>
       {showField && <LeakField mode="drift" lossRate={fieldRate} parallax />}
-      {showChrome && <ProgressChrome step={c.step} totalSteps={5} />}
+      {showChrome && <ProgressChrome step={c.step} totalSteps={LAST_QUESTION_STEP} />}
 
       {trans.prev !== null && (
         <div key={'prev-' + trans.prev} className={`pane no-anim ${trans.dir > 0 ? 'pane-out-fwd' : 'pane-out-back'}`}>

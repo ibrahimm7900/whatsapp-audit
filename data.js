@@ -1,13 +1,17 @@
 // data.js — workflow library, industry config, calculation logic
 // Loaded as plain JS so it's available globally before babel scripts run.
 
+// defaultDeal: per-industry typical "your take per deal" (AED). Used to auto-populate
+// dealValue when the deal-value step is skipped in the streamlined tap-only flow —
+// calc() requires dealValue, and this value also feeds the report's workflow ranking
+// (boost_high_value / boost_medium_value in the workflows below). Mid-range per vertical.
 window.IDS_INDUSTRIES = [
-  { id: 'real_estate', name: 'Real estate',  desc: 'Agents, brokerages, developers',     dealLabel: 'commission' },
-  { id: 'hvac',        name: 'HVAC',         desc: 'AC installation and maintenance',    dealLabel: 'callout' },
-  { id: 'automotive',  name: 'Automotive',   desc: 'Dealerships and traders',            dealLabel: 'margin' },
-  { id: 'wellness',    name: 'Wellness',     desc: 'Clinics, salons, gyms',              dealLabel: 'appointment' },
-  { id: 'logistics',   name: 'Logistics',    desc: 'Freight, delivery, warehousing',     dealLabel: 'contract' },
-  { id: 'education',   name: 'Education',    desc: 'Schools, tutoring, training',        dealLabel: 'enrolment' },
+  { id: 'real_estate', name: 'Real estate',  desc: 'Agents, brokerages, developers',     dealLabel: 'commission',  defaultDeal: 50000 },
+  { id: 'hvac',        name: 'HVAC',         desc: 'AC installation and maintenance',    dealLabel: 'callout',     defaultDeal: 500 },
+  { id: 'automotive',  name: 'Automotive',   desc: 'Dealerships and traders',            dealLabel: 'margin',      defaultDeal: 50000 },
+  { id: 'wellness',    name: 'Wellness',     desc: 'Clinics, salons, gyms',              dealLabel: 'appointment', defaultDeal: 500 },
+  { id: 'logistics',   name: 'Logistics',    desc: 'Freight, delivery, warehousing',     dealLabel: 'contract',    defaultDeal: 5000 },
+  { id: 'education',   name: 'Education',    desc: 'Schools, tutoring, training',        dealLabel: 'enrolment',   defaultDeal: 5000 },
 ];
 
 window.IDS_DEAL_PRESETS = [

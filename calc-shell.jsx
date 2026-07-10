@@ -19,10 +19,10 @@ function Wordmark({ size = 16, dot = true, color }) {
 // Progress bar — fixed at top. Endowed progress: starts at 10%.
 // Labels flip to a countdown past the midpoint (goal-gradient).
 // ─────────────────────────────────────────────────────────────
-function ProgressChrome({ step, totalSteps = 5 }) {
+function ProgressChrome({ step, totalSteps = 3 }) {
   const visible = step > 0 && step <= totalSteps;
   const pct = visible ? 10 + ((step - 1) / totalSteps) * 90 : 0;
-  const label = step >= 5 ? 'LAST QUESTION' : step === 4 ? '2 QUESTIONS LEFT' : `STEP ${step} OF ${totalSteps}`;
+  const label = step >= totalSteps ? 'LAST QUESTION' : `STEP ${step} OF ${totalSteps}`;
   return (
     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: 'calc(12px + env(safe-area-inset-top, 0px)) 20px 10px', background: 'var(--bg)', zIndex: 5 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -348,10 +348,10 @@ function Step5Coverage({ value, onChange, onCalculate, onBack }) {
 function CalculatingState({ inputs = {}, industryObj }) {
   const resp = window.IDS_RESPONSE.find(r => r.id === inputs.responseTime);
   const cov = window.IDS_COVERAGE.find(x => x.id === inputs.coverage);
+  // Only the three questions the user actually answered — deal value and volume are
+  // auto-derived now, so showing them here would reveal defaults the user never chose.
   const rows = [
     ['INDUSTRY', industryObj ? industryObj.name.toUpperCase() : '—'],
-    ['DEAL VALUE', inputs.dealValue ? window.IDS_fmtAED(inputs.dealValue) : '—'],
-    ['VOLUME', (inputs.weeklyEnquiries >= 200 ? '200+' : (inputs.weeklyEnquiries || '—')) + ' / WEEK'],
     ['RESPONSE', resp ? resp.label.toUpperCase() : '—'],
     ['COVERAGE', cov ? cov.label.toUpperCase() : '—'],
   ];
@@ -397,24 +397,22 @@ function WelcomeScreen({ onStart }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%', padding: 'calc(78px + env(safe-area-inset-top, 0px)) 22px calc(22px + env(safe-area-inset-bottom, 0px))' }}>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-        <div className="eyebrow rv" style={{ marginBottom: 14 }}>FREE · 40 SECONDS · NO SIGN-UP</div>
+        <div className="eyebrow rv" style={{ marginBottom: 14 }}>FREE · 30 SECONDS · NO SIGN-UP, NO CALL</div>
         <h1 className="h-display" style={{ fontSize: 38, marginBottom: 14, lineHeight: 1.07 }}>
           <span className="mask-line"><span style={{ '--d': '60ms' }}>How much revenue</span></span>
           <span className="mask-line"><span style={{ '--d': '150ms' }}>is your WhatsApp</span></span>
           <span className="mask-line"><span style={{ '--d': '240ms', color: 'var(--clay-deep)' }}>leaking?</span></span>
         </h1>
         <p className="rv" style={{ '--d': '340ms', fontSize: 15, color: 'var(--fg-3)', lineHeight: 1.5, marginBottom: 20 }}>
-          Five questions. One specific AED number.
+          Three questions. One specific AED number.
           A free report on what to fix first — built for your business.
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0, borderTop: '1px solid var(--hairline)' }}>
           {[
             ['01', 'Your business'],
-            ['02', 'Your numbers'],
-            ['03', 'Your volume'],
-            ['04', 'Your response'],
-            ['05', 'Your coverage'],
+            ['02', 'Your response'],
+            ['03', 'Your coverage'],
           ].map(([n, label], i) => (
             <div key={n} className="rv" style={{ '--d': `${430 + i * 60}ms`, display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: '1px solid var(--hairline)', whiteSpace: 'nowrap' }}>
               <span className="eyebrow" style={{ fontSize: 10, color: 'var(--fg-4)' }}>{n}</span>

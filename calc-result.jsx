@@ -68,8 +68,8 @@ function generateReportMD(inputs, calc, industryObj, name) {
   const covObj        = window.IDS_COVERAGE.find(c => c.id === inputs.coverage);
   const enq           = inputs.weeklyEnquiries >= 200 ? '200+' : inputs.weeklyEnquiries;
   const annual        = calc.monthlyLoss * 12;
-  const lossWithPilot = Math.round((calc.monthlyLoss * 0.25) / 100) * 100;
-  const netWithPilot  = calc.monthlyLoss - lossWithPilot - 5000;
+  const residualLoss  = Math.round((calc.monthlyLoss * 0.25) / 100) * 100; // ~75% recovered
+  const recovered     = calc.monthlyLoss - residualLoss;
   const fmt           = window.IDS_fmtAED;
 
   const workflowBlocks = workflows.map((w, i) => [
@@ -87,7 +87,7 @@ function generateReportMD(inputs, calc, industryObj, name) {
     '',
     '<!-- PAGE:1 -->',
     '## Your Situation',
-    `**Prepared for:** ${name} · ${dateStr}`,
+    `**Prepared for:** ${name || 'you'} · ${dateStr}`,
     '',
     '### Diagnosis',
     getDiagnosisParagraph(inputs, calc),
@@ -117,16 +117,14 @@ function generateReportMD(inputs, calc, industryObj, name) {
     '<!-- PAGE:3 -->',
     '## The Numbers, Side by Side',
     '',
-    '| | Doing nothing | Starting the pilot |',
+    '| | Doing nothing | With a custom-built WhatsApp system |',
     '|---|---|---|',
-    '| Setup cost | AED 0 | AED 0 |',
-    '| Monthly cost | AED 0 | AED 5,000 |',
-    `| Monthly loss | ${fmt(calc.monthlyLoss)} | ${fmt(lossWithPilot)} |`,
-    `| Net position | −${fmt(calc.monthlyLoss)} | +${fmt(netWithPilot)} |`,
+    `| Monthly loss | ${fmt(calc.monthlyLoss)} | ${fmt(residualLoss)} |`,
+    `| Recovered each month | AED 0 | +${fmt(recovered)} |`,
     '',
     `Every month you wait costs you ${fmt(calc.monthlyLoss)}.`,
-    `Every month with the pilot costs you AED 5,000.`,
-    `The difference is ${fmt(netWithPilot)} — in your pocket, not your competitors'.`,
+    `A custom-built WhatsApp system recovers most of that — around ${fmt(recovered)} a month back in your pocket.`,
+    `The fix costs a fraction of what you're losing. We'll show you exactly — free.`,
     '',
     "### Your Next Step — Try it free. See it work. Then decide.",
     '**AED 0** to start · **24 hrs** to live · **No contract**',
@@ -199,8 +197,8 @@ function ResultScreen({ inputs, calc, onUnlock, onBack, industryObj }) {
 
           <div style={{ borderTop: '1px solid rgba(247,243,237,0.18)', marginTop: 18, paddingTop: 18 }}>
             <p style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 17, lineHeight: 1.35, color: 'var(--paper)', textWrap: 'pretty' }}>
-              The fix costs AED 5,000/month.<br />
-              You're losing {window.IDS_fmtAED(calc.monthlyLoss)}.
+              You're losing {window.IDS_fmtAED(calc.monthlyLoss)} a month.<br />
+              The fix costs a fraction of that.
             </p>
             <p style={{ fontSize: 12.5, color: 'var(--paper-3)', marginTop: 10, lineHeight: 1.5 }}>
               Every week you wait costs you another <span style={{ color: 'var(--paper)' }}>{window.IDS_fmtAED(calc.weeklyLoss)}</span>.
@@ -550,7 +548,10 @@ function EmailGate({ open, onClose, onSubmit }) {
 
   if (!open) return null;
   const localDigits = cleanLocalNumber(phone, dialCode);
-  const valid = name.trim().length > 0 && localDigits.length >= 7;
+  // Phone is the only required field — name is optional. Every extra required field
+  // cuts completion, and this gate sits at the highest-intent moment. We capture the
+  // name inside the WhatsApp conversation afterward if it's left blank.
+  const valid = localDigits.length >= 7;
 
   function submit(e) {
     e.preventDefault();
@@ -575,9 +576,9 @@ function EmailGate({ open, onClose, onSubmit }) {
               Your personalised report includes workflow recommendations built for your business. It's free.
             </p>
 
-            <label className="form-label">YOUR NAME</label>
+            <label className="form-label">YOUR NAME (OPTIONAL)</label>
             <input
-              type="text" autoFocus value={name} onChange={(e) => setName(e.target.value)}
+              type="text" value={name} onChange={(e) => setName(e.target.value)}
               placeholder="First name"
               className="form-input" style={{ marginBottom: 14 }}
             />
@@ -667,7 +668,7 @@ function ResultScreenAnnual({ inputs, calc, industryObj, onUnlock, onBack }) {
 
         <div className="rv" style={{ '--d': '1250ms', marginTop: 'auto', paddingTop: 22 }}>
           <p style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 17, lineHeight: 1.4, color: 'var(--paper)', textWrap: 'pretty' }}>
-            The fix costs AED 60,000/year. You're losing {window.IDS_fmtAED(calc.monthlyLoss * 12)}.
+            You're losing {window.IDS_fmtAED(calc.monthlyLoss * 12)} a year. The fix costs a fraction of that.
           </p>
           <button type="button" onClick={onUnlock} className="btn btn-paper" style={{ marginTop: 18 }}>
             Get my free report <span className="btn-arrow" style={{ marginLeft: 4 }}>→</span>
@@ -704,7 +705,7 @@ function TimeRow({ label, value, last }) {
 function ReportSentScreen({ calc, lead, onRestart }) {
   const phone = lead?.whatsapp || 'your WhatsApp';
   const lossLabel = window.IDS_fmtAED(calc.monthlyLoss);
-  const waText = encodeURIComponent(`Hi, I just did the WhatsApp revenue audit — looks like I'm losing ${lossLabel} a month. Can you tell me more about the pilot?`);
+  const waText = encodeURIComponent(`Hi, I just did the WhatsApp revenue audit — looks like I'm losing ${lossLabel} a month. Can you tell me more about the custom-built WhatsApp system?`);
   const waLink = `https://wa.me/447353750250?text=${waText}`;
   const igLink = 'https://www.instagram.com/ibrahim.prompted/';
 
@@ -733,7 +734,7 @@ function ReportSentScreen({ calc, lead, onRestart }) {
 
         <div className="eyebrow" style={{ fontSize: 9, color: 'var(--paper-3)', marginBottom: 8 }}>WHILE YOU WAIT</div>
         <p style={{ fontFamily: 'var(--font-display)', fontWeight: 500, fontSize: 16, lineHeight: 1.4, color: 'var(--paper)', marginBottom: 18, textWrap: 'pretty' }}>
-          Want to start the pilot today? Message us — we'll have you live in 24 hours.
+          Want to get started today? Message us — we'll have you live in 24 hours.
         </p>
 
         <div style={{ marginTop: 'auto', paddingTop: 18 }}>
